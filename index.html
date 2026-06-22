@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>扫雷</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" aria-label="扫雷游戏">
+      <header class="topbar">
+        <div class="brand">
+          <p class="eyebrow">Minesweeper</p>
+          <h1>扫雷</h1>
+        </div>
+        <div class="difficulty" aria-label="选择难度">
+          <button class="difficulty-button active" data-level="easy">初级</button>
+          <button class="difficulty-button" data-level="medium">中级</button>
+          <button class="difficulty-button" data-level="expert">高级</button>
+        </div>
+      </header>
+
+      <section class="statusbar" aria-label="游戏状态">
+        <div class="metric">
+          <span>剩余雷数</span>
+          <strong id="mineCount">010</strong>
+        </div>
+        <button id="restartButton" class="restart-button" type="button" aria-label="重新开始">
+          <span id="faceIcon" aria-hidden="true">🙂</span>
+          重新开始
+        </button>
+        <div class="metric">
+          <span>用时</span>
+          <strong id="timer">000</strong>
+        </div>
+        <div class="metric best">
+          <span>最佳</span>
+          <strong id="bestTime">--</strong>
+        </div>
+        <label class="switch">
+          <input id="flagMode" type="checkbox" />
+          <span>旗帜模式</span>
+        </label>
+        <button id="soundButton" class="ghost-button" type="button">声音：开</button>
+      </section>
+
+      <section class="game-area">
+        <aside class="help-panel">
+          <div>
+            <h2 id="statusTitle">准备开始</h2>
+            <p id="statusText">点击任意格子开始计时。左键翻开，右键插旗；手机上可开启旗帜模式。</p>
+          </div>
+          <div class="legend" aria-label="图例">
+            <span><i class="legend-cell hidden"></i>未翻开</span>
+            <span><i class="legend-cell flag"></i>旗帜</span>
+            <span><i class="legend-cell mine"></i>地雷</span>
+          </div>
+        </aside>
+        <div class="board-wrap" aria-label="棋盘区域，可横向滑动查看完整棋盘">
+          <div id="board" class="board" aria-label="扫雷棋盘"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
