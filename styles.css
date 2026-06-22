@@ -389,6 +389,14 @@ h1 {
   background: #1d1d1f;
 }
 
+.site-footer {
+  padding: 18px 8px 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}
+
 .n1 { color: #0071e3; }
 .n2 { color: #34c759; }
 .n3 { color: #ff3b30; }
@@ -611,6 +619,11 @@ h1 {
   .cell {
     border-radius: 7px;
     touch-action: manipulation;
+  }
+
+  .site-footer {
+    padding: 14px 8px;
+    font-size: 12px;
   }
 }
 
