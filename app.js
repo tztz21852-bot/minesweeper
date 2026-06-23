@@ -54,6 +54,7 @@ const LEVELS = {
 
 const homeView = document.querySelector("#homeView");
 const minesweeperView = document.querySelector("#minesweeperView");
+const appShell = document.querySelector(".app-shell");
 const gameListEl = document.querySelector("#gameList");
 const backHomeButton = document.querySelector("#backHomeButton");
 const boardEl = document.querySelector("#board");
@@ -76,6 +77,8 @@ let finished = false;
 let timer = 0;
 let timerId = null;
 let soundOn = true;
+let activeView = "home";
+let viewTransitioning = false;
 
 function renderGameCards() {
   gameListEl.innerHTML = GAME_LIST.map((game) => `
@@ -97,16 +100,55 @@ function renderGameCards() {
   });
 }
 
+function setViewHidden(view, hidden) {
+  view.classList.toggle("hidden", hidden);
+  view.setAttribute("aria-hidden", String(hidden));
+}
+
+function animateViewChange(nextView) {
+  if (viewTransitioning || activeView === nextView) return;
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const fromView = activeView === "home" ? homeView : minesweeperView;
+  const toView = nextView === "home" ? homeView : minesweeperView;
+  const directionClass = nextView === "game" ? "slide-to-game" : "slide-to-home";
+
+  viewTransitioning = true;
+  setViewHidden(toView, false);
+  const transitionHeight = Math.max(fromView.offsetHeight, toView.offsetHeight, window.innerHeight);
+  appShell.style.minHeight = `${transitionHeight}px`;
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
+  if (reduceMotion) {
+    setViewHidden(fromView, true);
+    appShell.style.minHeight = "";
+    activeView = nextView;
+    viewTransitioning = false;
+    return;
+  }
+
+  window.requestAnimationFrame(() => {
+    appShell.classList.add("view-transitioning", directionClass);
+  });
+
+  window.setTimeout(() => {
+    appShell.classList.remove("view-transitioning", directionClass);
+    setViewHidden(fromView, true);
+    setViewHidden(toView, false);
+    appShell.style.minHeight = "";
+    activeView = nextView;
+    viewTransitioning = false;
+  }, 560);
+}
+
 function showHome() {
   stopTimer();
-  homeView.classList.remove("hidden");
-  minesweeperView.classList.add("hidden");
+  animateViewChange("home");
 }
 
 function showMinesweeper() {
-  homeView.classList.add("hidden");
-  minesweeperView.classList.remove("hidden");
   window.requestAnimationFrame(() => render());
+  animateViewChange("game");
 }
 
 function pad(value) {
@@ -396,5 +438,7 @@ soundButton.addEventListener("click", () => {
 
 window.addEventListener("resize", render);
 
+setViewHidden(homeView, false);
+setViewHidden(minesweeperView, true);
 renderGameCards();
 resetGame();
