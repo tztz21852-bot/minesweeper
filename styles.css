@@ -296,12 +296,15 @@ button {
 
 .mine-preview-grid {
   grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
 }
 
 .mine-preview-grid span,
 .match-preview-grid .tile,
 .link-preview .fruit {
   display: grid;
+  min-width: 0;
+  min-height: 0;
   place-items: center;
   background: rgba(255, 255, 255, 0.82);
   box-shadow: 0 5px 12px rgba(63, 92, 135, 0.16);
