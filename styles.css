@@ -63,7 +63,7 @@ button {
 
 .home-view {
   position: relative;
-  max-width: 480px;
+  max-width: 1040px;
   min-height: calc(100vh - 46px);
   margin: 0 auto;
   padding: 4px 0 86px;
@@ -71,7 +71,6 @@ button {
 
 .home-header,
 .section-title,
-.daily-content,
 .game-topbar {
   display: flex;
   align-items: center;
@@ -95,7 +94,6 @@ button {
 .hero-card p,
 .section-title span,
 .game-info p,
-.daily-content p,
 .help-panel p {
   margin: 0;
   color: var(--muted);
@@ -106,7 +104,6 @@ button {
   font-size: 15px;
 }
 
-.settings-button,
 .icon-button,
 .enter-button {
   display: inline-grid;
@@ -118,15 +115,7 @@ button {
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
 }
 
-.settings-button {
-  width: 46px;
-  height: 46px;
-  border-radius: 17px;
-  box-shadow: 0 10px 28px rgba(28, 47, 82, 0.08);
-}
-
 .hero-card,
-.daily-card,
 .game-card,
 .statusbar,
 .game-area {
@@ -209,53 +198,79 @@ button {
 }
 
 .section-block {
-  margin-top: 24px;
+  margin-top: 30px;
 }
 
 .section-title {
-  margin-bottom: 12px;
+  margin-bottom: 18px;
 }
 
 .section-title h2 {
   margin: 0;
-  font-size: 21px;
+  color: #1d1d1f;
+  font-size: 32px;
+  font-weight: 800;
   letter-spacing: 0;
 }
 
 .section-title span {
+  display: none;
   font-size: 13px;
   font-weight: 600;
 }
 
 .game-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 2px 4px 18px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.game-grid::-webkit-scrollbar {
+  display: none;
 }
 
 .game-card {
   display: flex;
-  min-width: 0;
-  min-height: 248px;
+  flex: 0 0 clamp(280px, 30vw, 320px);
+  width: clamp(280px, 30vw, 320px);
+  height: 548px;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 12px;
-  padding: 14px 12px 16px;
-  border-radius: 24px;
+  gap: 22px;
+  padding: 28px 24px 30px;
+  border: 1px solid rgba(29, 29, 31, 0.08);
+  border-radius: 32px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  scroll-snap-align: start;
   text-align: center;
+  transition: transform 300ms ease, box-shadow 300ms ease;
+}
+
+.game-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
+}
+
+.game-card:active {
+  transform: scale(0.97);
 }
 
 .game-card.blue {
-  background: linear-gradient(180deg, rgba(222, 240, 255, 0.9), rgba(255, 255, 255, 0.82));
+  background: linear-gradient(180deg, #eaf4ff 0%, #ffffff 100%);
 }
 
 .game-card.purple {
-  background: linear-gradient(180deg, rgba(239, 229, 255, 0.92), rgba(255, 255, 255, 0.82));
+  background: linear-gradient(180deg, #f4ecff 0%, #ffffff 100%);
 }
 
 .game-card.green {
-  background: linear-gradient(180deg, rgba(231, 246, 224, 0.95), rgba(255, 255, 255, 0.84));
+  background: linear-gradient(180deg, #eef8ea 0%, #ffffff 100%);
 }
 
 .game-card.locked {
@@ -264,18 +279,19 @@ button {
 
 .game-visual {
   display: grid;
-  width: min(100%, 118px);
-  height: 118px;
+  width: 100%;
+  height: 248px;
   place-items: center;
-  margin-bottom: 2px;
+  margin-bottom: 6px;
 }
 
 .mine-preview-grid,
 .match-preview-grid {
   display: grid;
-  width: 94px;
-  height: 94px;
-  gap: 2px;
+  width: 176px;
+  height: 176px;
+  gap: 5px;
+  filter: drop-shadow(0 18px 24px rgba(51, 79, 120, 0.12));
 }
 
 .mine-preview-grid {
@@ -292,13 +308,14 @@ button {
 }
 
 .mine-preview-grid span {
-  border-radius: 5px;
+  border-radius: 9px;
   color: var(--muted);
   font-weight: 800;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 18px rgba(63, 92, 135, 0.13);
 }
 
 .mine-preview-grid .num {
-  font-size: 17px;
+  font-size: 26px;
 }
 
 .mine-preview-grid .blue { color: var(--blue); }
@@ -310,8 +327,8 @@ button {
 }
 
 .mine-preview-grid .mine-dot::before {
-  width: 14px;
-  height: 14px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: #32363d;
   box-shadow: 0 0 0 3px rgba(50, 54, 61, 0.1);
@@ -323,10 +340,11 @@ button {
 }
 
 .match-preview-grid .tile {
-  border-radius: 9px;
+  border-radius: 16px;
   color: rgba(255, 255, 255, 0.86);
-  font-size: 17px;
+  font-size: 28px;
   font-weight: 800;
+  box-shadow: inset 0 2px 8px rgba(255, 255, 255, 0.34), inset 0 -8px 16px rgba(0, 0, 0, 0.08), 0 10px 18px rgba(70, 62, 110, 0.15);
 }
 
 .match-preview-grid .red { background: linear-gradient(145deg, #ff7e89, #f33e55); }
@@ -337,23 +355,24 @@ button {
 
 .link-preview {
   position: relative;
-  width: 108px;
-  height: 98px;
+  width: 196px;
+  height: 178px;
+  filter: drop-shadow(0 18px 24px rgba(65, 112, 62, 0.12));
 }
 
 .link-preview .fruit {
   position: absolute;
   z-index: 2;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  font-size: 22px;
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
+  font-size: 36px;
 }
 
-.link-preview .strawberry { left: 6px; top: 4px; }
-.link-preview .avocado { right: 5px; top: 7px; }
-.link-preview .one { left: 14px; bottom: 4px; }
-.link-preview .two { right: 10px; bottom: 2px; }
+.link-preview .strawberry { left: 8px; top: 2px; }
+.link-preview .avocado { right: 8px; top: 7px; }
+.link-preview .one { left: 20px; bottom: 6px; }
+.link-preview .two { right: 14px; bottom: 2px; }
 
 .link-preview .path {
   position: absolute;
@@ -362,39 +381,43 @@ button {
   background: rgba(114, 199, 99, 0.42);
 }
 
-.link-preview .h1 { left: 42px; top: 26px; width: 27px; height: 6px; }
-.link-preview .v1 { left: 68px; top: 26px; width: 6px; height: 43px; }
-.link-preview .h2 { left: 38px; top: 66px; width: 35px; height: 6px; }
-.link-preview .v2 { left: 38px; top: 41px; width: 6px; height: 30px; }
+.link-preview .h1 { left: 73px; top: 42px; width: 53px; height: 9px; }
+.link-preview .v1 { left: 126px; top: 42px; width: 9px; height: 78px; }
+.link-preview .h2 { left: 72px; top: 119px; width: 60px; height: 9px; }
+.link-preview .v2 { left: 72px; top: 68px; width: 9px; height: 60px; }
 
 .game-info {
   display: grid;
-  gap: 7px;
-  min-height: 58px;
+  gap: 12px;
+  min-height: 104px;
   align-content: start;
 }
 
 .game-info h3 {
   margin: 0;
-  font-size: 19px;
+  color: #000000;
+  font-size: 36px;
+  font-weight: 800;
   line-height: 1.1;
 }
 
 .game-info p {
-  min-height: 36px;
-  font-size: 12px;
+  min-height: 52px;
+  color: #8e8e93;
+  font-size: 18px;
   line-height: 1.4;
 }
 
 .enter-button {
-  width: 42px;
-  height: 42px;
+  width: 72px;
+  height: 72px;
   margin-top: auto;
   border-radius: 50%;
   color: var(--blue);
-  font-size: 26px;
+  background: #ffffff;
+  font-size: 40px;
   line-height: 1;
-  box-shadow: 0 8px 20px rgba(54, 77, 114, 0.12);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 .game-card.purple .enter-button {
@@ -403,47 +426,6 @@ button {
 
 .game-card.green .enter-button {
   color: #32ad45;
-}
-
-.daily-card {
-  margin-top: 18px;
-  padding: 18px;
-  border-radius: 26px;
-}
-
-.reward-badge {
-  display: grid;
-  width: 54px;
-  height: 54px;
-  place-items: center;
-  border-radius: 20px;
-  background: linear-gradient(145deg, #fff4c6, #ffcf5a);
-  box-shadow: 0 12px 24px rgba(255, 159, 10, 0.18);
-  font-size: 26px;
-}
-
-.daily-content {
-  justify-content: flex-start;
-}
-
-.daily-content h2 {
-  margin: 4px 0 0;
-  font-size: 19px;
-}
-
-.progress-track {
-  height: 9px;
-  margin-top: 16px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(118, 118, 128, 0.14);
-}
-
-.progress-track span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--blue), #64d2ff);
 }
 
 .tab-bar {
@@ -903,47 +885,55 @@ button {
   }
 
   .game-grid {
-    gap: 9px;
+    gap: 18px;
+    margin-inline: -14px;
+    padding-inline: 14px;
   }
 
   .game-card {
-    min-height: 238px;
-    padding: 13px 10px 15px;
-    border-radius: 23px;
+    flex-basis: min(320px, calc(100vw - 48px));
+    width: min(320px, calc(100vw - 48px));
+    height: 540px;
+    padding: 26px 22px 28px;
+    border-radius: 32px;
   }
 
   .game-visual {
-    height: 108px;
+    height: 236px;
   }
 
   .mine-preview-grid,
   .match-preview-grid {
-    width: 86px;
-    height: 86px;
+    width: 168px;
+    height: 168px;
+  }
+
+  .mine-preview-grid .num {
+    font-size: 24px;
   }
 
   .link-preview {
-    width: 94px;
-    height: 90px;
+    width: 186px;
+    height: 170px;
   }
 
   .link-preview .fruit {
-    width: 36px;
-    height: 36px;
-    font-size: 19px;
+    width: 64px;
+    height: 64px;
+    font-size: 34px;
   }
 
   .game-info h3 {
-    font-size: 18px;
+    font-size: 34px;
   }
 
   .game-info p {
-    font-size: 11px;
+    font-size: 17px;
   }
 
   .enter-button {
-    width: 40px;
-    height: 40px;
+    width: 72px;
+    height: 72px;
   }
 
   .game-view {
@@ -1129,35 +1119,37 @@ button {
   }
 
   .game-grid {
-    gap: 7px;
+    gap: 14px;
   }
 
   .game-card {
-    min-height: 224px;
-    padding-inline: 8px;
+    flex-basis: calc(100vw - 42px);
+    width: calc(100vw - 42px);
+    height: 526px;
+    padding-inline: 20px;
   }
 
   .game-visual {
-    height: 96px;
+    height: 224px;
   }
 
   .mine-preview-grid,
   .match-preview-grid {
-    width: 76px;
-    height: 76px;
+    width: 154px;
+    height: 154px;
   }
 
   .mine-preview-grid .num {
-    font-size: 14px;
+    font-size: 22px;
   }
 
   .match-preview-grid .tile {
-    border-radius: 7px;
-    font-size: 14px;
+    border-radius: 14px;
+    font-size: 24px;
   }
 
   .link-preview {
-    transform: scale(0.86);
+    transform: scale(0.92);
   }
 
   .game-topbar {
