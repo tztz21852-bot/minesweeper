@@ -2,37 +2,40 @@ const GAME_LIST = [
   {
     id: "minesweeper",
     name: "扫雷",
-    description: "经典益智，挑战脑力",
-    tone: "blue",
+    subtitle: "经典益智，挑战脑力",
+    themeColor: "#3B82F6",
+    gradient: "linear-gradient(180deg, #EAF4FF 0%, #FFFFFF 100%)",
     available: true,
     visual: `
       <div class="mine-preview-grid">
         <span></span><span class="num blue">1</span><span class="num green">2</span><span></span>
-        <span></span><span></span><span class="num blue">1</span><span class="avatar-tile"></span>
+        <span></span><span></span><span class="num blue">1</span><span class="flag-tile"></span>
         <span class="mine-dot"></span><span class="num green">1</span><span class="num red">3</span><span></span>
-        <span></span><span class="avatar-tile"></span><span></span><span></span>
+        <span></span><span class="flag-tile"></span><span></span><span></span>
       </div>
     `,
   },
   {
-    id: "match",
+    id: "match3",
     name: "消消乐",
-    description: "欢乐消除，轻松解压",
-    tone: "purple",
+    subtitle: "欢乐消除，轻松解压",
+    themeColor: "#A855F7",
+    gradient: "linear-gradient(180deg, #F4ECFF 0%, #FFFFFF 100%)",
     available: false,
     visual: `
       <div class="match-preview-grid">
-        <span class="tile red">♥</span><span class="tile yellow">★</span><span class="tile green">♣</span>
-        <span class="tile blue">●</span><span class="tile red">♥</span><span class="tile purple">●</span>
-        <span class="tile yellow">★</span><span class="tile blue">●</span><span class="tile purple">●</span>
+        <span class="tile red heart"></span><span class="tile yellow star"></span><span class="tile green drop"></span>
+        <span class="tile blue gem"></span><span class="tile red heart"></span><span class="tile purple candy"></span>
+        <span class="tile yellow star"></span><span class="tile blue drop"></span><span class="tile purple gem"></span>
       </div>
     `,
   },
   {
     id: "link",
     name: "连连看",
-    description: "连线配对，考验眼力",
-    tone: "green",
+    subtitle: "连线配对，考验眼力",
+    themeColor: "#4CAF50",
+    gradient: "linear-gradient(180deg, #EEF8EA 0%, #FFFFFF 100%)",
     available: false,
     visual: `
       <div class="link-preview">
@@ -79,16 +82,21 @@ let timerId = null;
 let soundOn = true;
 let activeView = "home";
 let viewTransitioning = false;
+const VIEW_TRANSITION_MS = 460;
 
 function renderGameCards() {
   gameListEl.innerHTML = GAME_LIST.map((game) => `
-    <article class="game-card ${game.tone} ${game.available ? "" : "locked"}" data-game-id="${game.id}">
+    <article class="game-card ${game.available ? "" : "locked"}" data-game-id="${game.id}" style="--game-theme: ${game.themeColor}; --game-gradient: ${game.gradient};">
       <div class="game-visual" aria-hidden="true">${game.visual}</div>
       <div class="game-info">
         <h3>${game.name}</h3>
-        <p>${game.description}</p>
+        <p>${game.subtitle}</p>
       </div>
-      <button class="enter-button" type="button" aria-label="进入${game.name}" ${game.available ? "" : "disabled"}>›</button>
+      <button class="enter-button" type="button" aria-label="进入${game.name}" ${game.available ? "" : "disabled"}>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
     </article>
   `).join("");
 
@@ -114,6 +122,7 @@ function animateViewChange(nextView) {
   const directionClass = nextView === "game" ? "slide-to-game" : "slide-to-home";
 
   viewTransitioning = true;
+  appShell.classList.add("view-transitioning", directionClass);
   setViewHidden(toView, false);
   const transitionHeight = Math.max(fromView.offsetHeight, toView.offsetHeight, window.innerHeight);
   appShell.style.minHeight = `${transitionHeight}px`;
@@ -127,10 +136,6 @@ function animateViewChange(nextView) {
     return;
   }
 
-  window.requestAnimationFrame(() => {
-    appShell.classList.add("view-transitioning", directionClass);
-  });
-
   window.setTimeout(() => {
     appShell.classList.remove("view-transitioning", directionClass);
     setViewHidden(fromView, true);
@@ -138,7 +143,7 @@ function animateViewChange(nextView) {
     appShell.style.minHeight = "";
     activeView = nextView;
     viewTransitioning = false;
-  }, 560);
+  }, VIEW_TRANSITION_MS);
 }
 
 function showHome() {
