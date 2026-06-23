@@ -3,25 +3,46 @@ const GAME_LIST = [
     id: "minesweeper",
     name: "扫雷",
     description: "经典益智，挑战脑力",
-    icon: "M",
     tone: "blue",
     available: true,
+    visual: `
+      <div class="mine-preview-grid">
+        <span></span><span class="num blue">1</span><span class="num green">2</span><span></span>
+        <span></span><span></span><span class="num blue">1</span><span class="avatar-tile"></span>
+        <span class="mine-dot"></span><span class="num green">1</span><span class="num red">3</span><span></span>
+        <span></span><span class="avatar-tile"></span><span></span><span></span>
+      </div>
+    `,
   },
   {
     id: "match",
     name: "消消乐",
     description: "欢乐消除，轻松解压",
-    icon: "X",
-    tone: "pink",
+    tone: "purple",
     available: false,
+    visual: `
+      <div class="match-preview-grid">
+        <span class="tile red">♥</span><span class="tile yellow">★</span><span class="tile green">♣</span>
+        <span class="tile blue">●</span><span class="tile red">♥</span><span class="tile purple">●</span>
+        <span class="tile yellow">★</span><span class="tile blue">●</span><span class="tile purple">●</span>
+      </div>
+    `,
   },
   {
     id: "link",
     name: "连连看",
     description: "连线配对，考验眼力",
-    icon: "L",
     tone: "green",
     available: false,
+    visual: `
+      <div class="link-preview">
+        <span class="fruit strawberry">🍓</span>
+        <span class="fruit avocado">🥑</span>
+        <span class="fruit cherry one">🍒</span>
+        <span class="fruit cherry two">🍒</span>
+        <i class="path h1"></i><i class="path v1"></i><i class="path h2"></i><i class="path v2"></i>
+      </div>
+    `,
   },
 ];
 
@@ -34,7 +55,6 @@ const LEVELS = {
 const homeView = document.querySelector("#homeView");
 const minesweeperView = document.querySelector("#minesweeperView");
 const gameListEl = document.querySelector("#gameList");
-const startGameButton = document.querySelector("#startGameButton");
 const backHomeButton = document.querySelector("#backHomeButton");
 const boardEl = document.querySelector("#board");
 const mineCountEl = document.querySelector("#mineCount");
@@ -59,15 +79,13 @@ let soundOn = true;
 
 function renderGameCards() {
   gameListEl.innerHTML = GAME_LIST.map((game) => `
-    <article class="game-card ${game.available ? "" : "locked"}" data-game-id="${game.id}">
-      <div class="game-icon ${game.tone}" aria-hidden="true">${game.icon}</div>
+    <article class="game-card ${game.tone} ${game.available ? "" : "locked"}" data-game-id="${game.id}">
+      <div class="game-visual" aria-hidden="true">${game.visual}</div>
       <div class="game-info">
         <h3>${game.name}</h3>
         <p>${game.description}</p>
       </div>
-      <button class="enter-button" type="button" aria-label="进入${game.name}" ${game.available ? "" : "disabled"}>
-        ${game.available ? "›" : "·"}
-      </button>
+      <button class="enter-button" type="button" aria-label="进入${game.name}" ${game.available ? "" : "disabled"}>›</button>
     </article>
   `).join("");
 
@@ -369,7 +387,6 @@ difficultyButtons.forEach((button) => {
 });
 
 restartButton.addEventListener("click", () => resetGame());
-startGameButton.addEventListener("click", showMinesweeper);
 backHomeButton.addEventListener("click", showHome);
 
 soundButton.addEventListener("click", () => {
