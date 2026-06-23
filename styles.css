@@ -290,13 +290,16 @@ h1 {
 }
 
 .legend-cell.flag {
+  overflow: hidden;
   background: #fff1f0;
 }
 
 .legend-cell.flag::after {
-  content: "⚑";
-  color: var(--flag);
-  font-size: 15px;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: url("./assets/avatar-flag.jpg") center / cover;
+  content: "";
 }
 
 .legend-cell.mine {
@@ -364,11 +367,18 @@ h1 {
 }
 
 .cell.flagged {
-  color: var(--flag);
+  overflow: hidden;
+  padding: 2px;
+  color: transparent;
 }
 
 .cell.flagged::before {
-  content: "⚑";
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: url("./assets/avatar-flag.jpg") center / cover;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  content: "";
 }
 
 .cell.mine-hit {
