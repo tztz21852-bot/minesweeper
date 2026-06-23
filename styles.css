@@ -241,6 +241,37 @@ button {
 
 .hero-art {
   position: relative;
+  min-height: 142px;
+}
+
+.hero-avatar-card {
+  position: absolute;
+  right: 64px;
+  top: 18px;
+  z-index: 2;
+  width: 118px;
+  height: 118px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 38px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.5), rgba(230, 244, 255, 0.2)),
+    url("./assets/avatar-flag.jpg") center / cover;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 20px 40px rgba(75, 121, 171, 0.18);
+  transform: rotate(4deg);
+}
+
+.hero-avatar-card::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.42), transparent 42%),
+    radial-gradient(circle at 68% 22%, rgba(255, 255, 255, 0.34), transparent 26%);
+  content: "";
+  pointer-events: none;
 }
 
 .glass-shape {
@@ -255,18 +286,20 @@ button {
 }
 
 .shape-gamepad {
-  right: 6px;
-  top: 18px;
-  width: 84px;
-  height: 84px;
-  border-radius: 28px;
-  font-size: 34px;
-  transform: rotate(8deg);
+  right: 0;
+  top: 44px;
+  z-index: 3;
+  width: 62px;
+  height: 62px;
+  border-radius: 23px;
+  font-size: 28px;
+  transform: rotate(9deg);
 }
 
 .shape-star {
-  right: 88px;
-  top: 5px;
+  right: 154px;
+  top: 2px;
+  z-index: 3;
   width: 42px;
   height: 42px;
   border-radius: 16px;
@@ -275,11 +308,12 @@ button {
 }
 
 .shape-cube {
-  right: 72px;
-  bottom: 24px;
-  width: 52px;
-  height: 52px;
-  border-radius: 19px;
+  right: 160px;
+  bottom: 16px;
+  z-index: 1;
+  width: 48px;
+  height: 48px;
+  border-radius: 18px;
   color: var(--blue);
   font-size: 22px;
 }
@@ -1016,19 +1050,33 @@ button {
     font-size: 31px;
   }
 
+  .hero-avatar-card {
+    right: 44px;
+    top: 26px;
+    width: 104px;
+    height: 104px;
+    border-radius: 34px;
+  }
+
   .shape-gamepad {
-    right: -4px;
-    width: 76px;
-    height: 76px;
+    right: -2px;
+    top: 58px;
+    width: 56px;
+    height: 56px;
+    border-radius: 21px;
+    font-size: 25px;
   }
 
   .shape-star {
-    right: 70px;
+    right: 132px;
+    top: 14px;
   }
 
   .shape-cube {
-    right: 58px;
-    bottom: 18px;
+    right: 138px;
+    bottom: 20px;
+    width: 44px;
+    height: 44px;
   }
 
   .game-grid {
@@ -1273,7 +1321,30 @@ button {
   }
 
   .hero-art {
-    min-height: 86px;
+    min-height: 128px;
+  }
+
+  .hero-avatar-card {
+    right: 70px;
+    top: 8px;
+    width: 94px;
+    height: 94px;
+    border-radius: 30px;
+  }
+
+  .shape-gamepad {
+    right: 20px;
+    top: 34px;
+  }
+
+  .shape-star {
+    right: 146px;
+    top: 0;
+  }
+
+  .shape-cube {
+    right: 154px;
+    bottom: 8px;
   }
 
   .game-grid {
