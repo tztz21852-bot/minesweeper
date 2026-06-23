@@ -61,6 +61,84 @@ button {
   padding: max(22px, env(safe-area-inset-top)) 0 max(24px, env(safe-area-inset-bottom));
 }
 
+.app-shell.view-transitioning {
+  position: relative;
+  overflow: hidden;
+}
+
+.app-shell.view-transitioning .home-view,
+.app-shell.view-transitioning .game-view {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  will-change: transform, opacity, filter;
+  pointer-events: none;
+}
+
+.app-shell.slide-to-game .home-view {
+  animation: homeExitToGame 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.app-shell.slide-to-game .game-view {
+  animation: gameEnterFromRight 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.app-shell.slide-to-home .home-view {
+  animation: homeEnterFromLeft 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.app-shell.slide-to-home .game-view {
+  animation: gameExitToRight 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes gameEnterFromRight {
+  from {
+    opacity: 0.98;
+    transform: translate3d(34%, 0, 0);
+    filter: saturate(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: saturate(1);
+  }
+}
+
+@keyframes gameExitToRight {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: saturate(1);
+  }
+  to {
+    opacity: 0.98;
+    transform: translate3d(34%, 0, 0);
+    filter: saturate(0.96);
+  }
+}
+
+@keyframes homeExitToGame {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    opacity: 0.72;
+    transform: translate3d(-8%, 0, 0) scale(0.965);
+  }
+}
+
+@keyframes homeEnterFromLeft {
+  from {
+    opacity: 0.72;
+    transform: translate3d(-8%, 0, 0) scale(0.965);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
 .home-view {
   position: relative;
   max-width: 1040px;
@@ -817,14 +895,14 @@ button {
 }
 
 @media (max-width: 920px) {
-  .game-topbar,
-  .statusbar,
-  .game-area {
-    grid-template-columns: 1fr;
+  .game-topbar {
+    align-items: center;
   }
 
-  .game-topbar {
-    align-items: stretch;
+  .icon-button {
+    width: 56px;
+    height: 64px;
+    border-radius: 22px;
   }
 
   .difficulty {
@@ -836,14 +914,23 @@ button {
   }
 
   .statusbar {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(132px, 188px));
+    justify-content: start;
   }
 
   .restart-button,
-  .best,
   .switch,
   .ghost-button {
     grid-column: span 2;
+  }
+
+  .best {
+    grid-column: span 2;
+    width: min(100%, 388px);
+  }
+
+  .game-area {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -962,8 +1049,9 @@ button {
   }
 
   .icon-button {
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 64px;
+    border-radius: 20px;
   }
 
   .eyebrow {
@@ -983,12 +1071,13 @@ button {
   }
 
   .statusbar {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     padding: 10px 12px 12px;
   }
 
   .metric {
+    width: auto;
     min-height: 54px;
     padding: 8px 10px;
     border-radius: 14px;
