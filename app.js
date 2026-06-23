@@ -1,9 +1,41 @@
+const GAME_LIST = [
+  {
+    id: "minesweeper",
+    name: "扫雷",
+    description: "经典益智，挑战脑力",
+    icon: "M",
+    tone: "blue",
+    available: true,
+  },
+  {
+    id: "match",
+    name: "消消乐",
+    description: "欢乐消除，轻松解压",
+    icon: "X",
+    tone: "pink",
+    available: false,
+  },
+  {
+    id: "link",
+    name: "连连看",
+    description: "连线配对，考验眼力",
+    icon: "L",
+    tone: "green",
+    available: false,
+  },
+];
+
 const LEVELS = {
   easy: { label: "初级", rows: 9, cols: 9, mines: 10 },
   medium: { label: "中级", rows: 16, cols: 16, mines: 40 },
   expert: { label: "高级", rows: 16, cols: 30, mines: 99 },
 };
 
+const homeView = document.querySelector("#homeView");
+const minesweeperView = document.querySelector("#minesweeperView");
+const gameListEl = document.querySelector("#gameList");
+const startGameButton = document.querySelector("#startGameButton");
+const backHomeButton = document.querySelector("#backHomeButton");
 const boardEl = document.querySelector("#board");
 const mineCountEl = document.querySelector("#mineCount");
 const timerEl = document.querySelector("#timer");
@@ -15,7 +47,7 @@ const faceIcon = document.querySelector("#faceIcon");
 const difficultyButtons = document.querySelectorAll(".difficulty-button");
 const flagModeEl = document.querySelector("#flagMode");
 const soundButton = document.querySelector("#soundButton");
-const shell = document.querySelector(".app-shell");
+const shell = document.querySelector(".game-view");
 
 let levelKey = "easy";
 let cells = [];
@@ -24,6 +56,40 @@ let finished = false;
 let timer = 0;
 let timerId = null;
 let soundOn = true;
+
+function renderGameCards() {
+  gameListEl.innerHTML = GAME_LIST.map((game) => `
+    <article class="game-card ${game.available ? "" : "locked"}" data-game-id="${game.id}">
+      <div class="game-icon ${game.tone}" aria-hidden="true">${game.icon}</div>
+      <div class="game-info">
+        <h3>${game.name}</h3>
+        <p>${game.description}</p>
+      </div>
+      <button class="enter-button" type="button" aria-label="进入${game.name}" ${game.available ? "" : "disabled"}>
+        ${game.available ? "›" : "·"}
+      </button>
+    </article>
+  `).join("");
+
+  gameListEl.querySelectorAll(".game-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      const game = GAME_LIST.find((item) => item.id === card.dataset.gameId);
+      if (game?.available) showMinesweeper();
+    });
+  });
+}
+
+function showHome() {
+  stopTimer();
+  homeView.classList.remove("hidden");
+  minesweeperView.classList.add("hidden");
+}
+
+function showMinesweeper() {
+  homeView.classList.add("hidden");
+  minesweeperView.classList.remove("hidden");
+  window.requestAnimationFrame(() => render());
+}
 
 function pad(value) {
   return String(value).padStart(3, "0");
@@ -303,6 +369,8 @@ difficultyButtons.forEach((button) => {
 });
 
 restartButton.addEventListener("click", () => resetGame());
+startGameButton.addEventListener("click", showMinesweeper);
+backHomeButton.addEventListener("click", showHome);
 
 soundButton.addEventListener("click", () => {
   soundOn = !soundOn;
@@ -311,4 +379,5 @@ soundButton.addEventListener("click", () => {
 
 window.addEventListener("resize", render);
 
+renderGameCards();
 resetGame();

@@ -3,63 +3,129 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>扫雷</title>
+    <title>小游戏合集</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main class="app-shell" aria-label="扫雷游戏">
-      <header class="topbar">
-        <div class="brand">
-          <p class="eyebrow">Minesweeper</p>
-          <h1>扫雷</h1>
-        </div>
-        <div class="difficulty" aria-label="选择难度">
-          <button class="difficulty-button active" data-level="easy">初级</button>
-          <button class="difficulty-button" data-level="medium">中级</button>
-          <button class="difficulty-button" data-level="expert">高级</button>
-        </div>
-      </header>
-
-      <section class="statusbar" aria-label="游戏状态">
-        <div class="metric">
-          <span>剩余雷数</span>
-          <strong id="mineCount">010</strong>
-        </div>
-        <button id="restartButton" class="restart-button" type="button" aria-label="重新开始">
-          <span id="faceIcon" aria-hidden="true">🙂</span>
-          重新开始
-        </button>
-        <div class="metric">
-          <span>用时</span>
-          <strong id="timer">000</strong>
-        </div>
-        <div class="metric best">
-          <span>最佳</span>
-          <strong id="bestTime">--</strong>
-        </div>
-        <label class="switch">
-          <input id="flagMode" type="checkbox" />
-          <span>旗帜模式</span>
-        </label>
-        <button id="soundButton" class="ghost-button" type="button">声音：开</button>
-      </section>
-
-      <section class="game-area">
-        <aside class="help-panel">
+    <main class="app-shell">
+      <section id="homeView" class="home-view" aria-label="小游戏合集首页">
+        <header class="home-header">
           <div>
-            <h2 id="statusTitle">准备开始</h2>
-            <p id="statusText">点击任意格子开始计时。左键翻开，右键插旗；手机上可开启旗帜模式。</p>
+            <h1>欢迎回来 👋</h1>
+            <p>轻松游戏，快乐每一天</p>
           </div>
-          <div class="legend" aria-label="图例">
-            <span><i class="legend-cell hidden"></i>未翻开</span>
-            <span><i class="legend-cell flag"></i>旗帜</span>
-            <span><i class="legend-cell mine"></i>地雷</span>
+          <button class="settings-button" type="button" aria-label="设置">
+            <span aria-hidden="true">⚙</span>
+          </button>
+        </header>
+
+        <section class="hero-card" aria-label="主视觉">
+          <div class="hero-copy">
+            <p class="hero-kicker">Game Center</p>
+            <h2>小游戏 大乐趣</h2>
+            <p>经典玩法，随时畅玩</p>
+            <button id="startGameButton" class="primary-button" type="button">开始游戏</button>
           </div>
-        </aside>
-        <div class="board-wrap" aria-label="棋盘区域，可横向滑动查看完整棋盘">
-          <div id="board" class="board" aria-label="扫雷棋盘"></div>
-        </div>
+          <div class="hero-art" aria-hidden="true">
+            <span class="glass-shape shape-gamepad">🎮</span>
+            <span class="glass-shape shape-star">★</span>
+            <span class="glass-shape shape-cube">◆</span>
+          </div>
+        </section>
+
+        <section class="section-block" aria-label="游戏选择">
+          <div class="section-title">
+            <h2>选择游戏</h2>
+            <span>3 款游戏</span>
+          </div>
+          <div id="gameList" class="game-grid"></div>
+        </section>
+
+        <section class="daily-card" aria-label="每日挑战">
+          <div class="daily-content">
+            <div class="reward-badge" aria-hidden="true">🏆</div>
+            <div>
+              <p>每日挑战</p>
+              <h2>今日已完成 2/3</h2>
+            </div>
+          </div>
+          <div class="progress-track" aria-label="今日挑战进度">
+            <span style="width: 66.66%"></span>
+          </div>
+        </section>
+
+        <nav class="tab-bar" aria-label="底部导航">
+          <button class="tab-button active" type="button">
+            <span>⌂</span>
+            首页
+          </button>
+          <button class="tab-button" type="button">
+            <span>◎</span>
+            成就
+          </button>
+          <button class="tab-button" type="button">
+            <span>◌</span>
+            我的
+          </button>
+        </nav>
       </section>
+
+      <section id="minesweeperView" class="game-view hidden" aria-label="扫雷游戏">
+        <header class="game-topbar">
+          <button id="backHomeButton" class="icon-button" type="button" aria-label="返回首页">‹</button>
+          <div>
+            <p class="eyebrow">Minesweeper</p>
+            <h1>扫雷</h1>
+          </div>
+          <div class="difficulty" aria-label="选择难度">
+            <button class="difficulty-button active" data-level="easy">初级</button>
+            <button class="difficulty-button" data-level="medium">中级</button>
+            <button class="difficulty-button" data-level="expert">高级</button>
+          </div>
+        </header>
+
+        <section class="statusbar" aria-label="游戏状态">
+          <div class="metric">
+            <span>剩余雷数</span>
+            <strong id="mineCount">010</strong>
+          </div>
+          <button id="restartButton" class="restart-button" type="button" aria-label="重新开始">
+            <span id="faceIcon" aria-hidden="true">🙂</span>
+            重新开始
+          </button>
+          <div class="metric">
+            <span>用时</span>
+            <strong id="timer">000</strong>
+          </div>
+          <div class="metric best">
+            <span>最佳</span>
+            <strong id="bestTime">--</strong>
+          </div>
+          <label class="switch">
+            <input id="flagMode" type="checkbox" />
+            <span>旗帜模式</span>
+          </label>
+          <button id="soundButton" class="ghost-button" type="button">声音：开</button>
+        </section>
+
+        <section class="game-area">
+          <aside class="help-panel">
+            <div>
+              <h2 id="statusTitle">准备开始</h2>
+              <p id="statusText">点击任意格子开始计时。左键翻开，右键插旗；手机上可开启旗帜模式。</p>
+            </div>
+            <div class="legend" aria-label="图例">
+              <span><i class="legend-cell hidden"></i>未翻开</span>
+              <span><i class="legend-cell flag"></i>旗帜</span>
+              <span><i class="legend-cell mine"></i>地雷</span>
+            </div>
+          </aside>
+          <div class="board-wrap" aria-label="棋盘区域，可横向滑动查看完整棋盘">
+            <div id="board" class="board" aria-label="扫雷棋盘"></div>
+          </div>
+        </section>
+      </section>
+
       <footer class="site-footer">作者：tz</footer>
     </main>
 
