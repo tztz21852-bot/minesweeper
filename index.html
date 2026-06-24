@@ -119,9 +119,24 @@
           </div>
           <div class="match-goal-pill" aria-label="本局目标">
             <span>目标</span>
-            <strong>1500 分</strong>
+            <strong id="matchGoalText">1500 分</strong>
           </div>
         </header>
+
+        <section class="match-mode-switch" aria-label="选择消消乐模式">
+          <button class="match-mode-button active" type="button" data-match-mode="tap">
+            <strong>点点消</strong>
+            <span>相连即消</span>
+          </button>
+          <button class="match-mode-button" type="button" data-match-mode="swap">
+            <strong>经典三消</strong>
+            <span>交换成线</span>
+          </button>
+          <button class="match-mode-button" type="button" data-match-mode="challenge">
+            <strong>限步挑战</strong>
+            <span>高分目标</span>
+          </button>
+        </section>
 
         <section class="statusbar match-statusbar" aria-label="消消乐状态">
           <div class="metric">
@@ -149,9 +164,12 @@
               <p id="matchStatusText">点击两个相邻方块进行交换，形成三个及以上同色方块即可消除。</p>
             </div>
             <div class="match-legend" aria-label="方块图例">
-              <span><i class="legend-candy candy-red">♥</i>爱心</span>
-              <span><i class="legend-candy candy-yellow">★</i>星星</span>
-              <span><i class="legend-candy candy-blue">●</i>水滴</span>
+              <span><i class="legend-candy candy-bear">🐻</i>小熊</span>
+              <span><i class="legend-candy candy-rabbit">🐰</i>兔兔</span>
+              <span><i class="legend-candy candy-chick">🐥</i>小鸡</span>
+              <span><i class="legend-candy candy-frog">🐸</i>青蛙</span>
+              <span><i class="legend-candy candy-fox">🦊</i>狐狸</span>
+              <span><i class="legend-candy candy-berry">🍓</i>草莓</span>
             </div>
           </aside>
           <div class="match-board-wrap" aria-label="消消乐棋盘">

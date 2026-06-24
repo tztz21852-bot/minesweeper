@@ -24,9 +24,9 @@ const GAME_LIST = [
     available: true,
     visual: `
       <div class="match-preview-grid">
-        <span class="tile red heart"></span><span class="tile yellow star"></span><span class="tile green drop"></span>
-        <span class="tile blue gem"></span><span class="tile red heart"></span><span class="tile purple candy"></span>
-        <span class="tile yellow star"></span><span class="tile blue drop"></span><span class="tile purple gem"></span>
+        <span class="tile bear"></span><span class="tile rabbit"></span><span class="tile chick"></span>
+        <span class="tile frog"></span><span class="tile fox"></span><span class="tile berry"></span>
+        <span class="tile chick"></span><span class="tile frog"></span><span class="tile rabbit"></span>
       </div>
     `,
   },
@@ -58,12 +58,48 @@ const LEVELS = {
 const MATCH3_SIZE = 8;
 const MATCH3_MOVES = 30;
 const MATCH3_TARGET = 1500;
+const MATCH3_MODES = {
+  tap: {
+    label: "点点消",
+    shortLabel: "点消",
+    description: "点击相连的 2 个及以上同色方块即可消除，适合休闲解压。",
+    readyText: "点击相连的同色方块即可消除，2 个起消，连消会获得更高分。",
+    invalidText: "这组方块数量还不够，至少需要 2 个相连同色方块。",
+    mechanic: "tap",
+    minGroup: 2,
+    moves: 36,
+    target: 1800,
+  },
+  swap: {
+    label: "经典三消",
+    shortLabel: "三消",
+    description: "交换相邻方块，形成 3 个及以上同色连线后消除。",
+    readyText: "点击两个相邻方块进行交换，形成三个及以上同色方块即可消除。",
+    invalidText: "交换后没有形成三连，方块已自动复位。",
+    mechanic: "swap",
+    minGroup: 3,
+    moves: 30,
+    target: MATCH3_TARGET,
+  },
+  challenge: {
+    label: "限步挑战",
+    shortLabel: "挑战",
+    description: "更少步数、更高目标，适合追求连消和高分。",
+    readyText: "限步挑战需要更谨慎地交换方块，优先制造四连、五连和连锁消除。",
+    invalidText: "这一步没有形成有效消除，挑战模式会自动复位。",
+    mechanic: "swap",
+    minGroup: 3,
+    moves: 20,
+    target: 2200,
+  },
+};
 const MATCH3_TYPES = [
-  { id: "red", icon: "♥", label: "爱心" },
-  { id: "yellow", icon: "★", label: "星星" },
-  { id: "blue", icon: "●", label: "水滴" },
-  { id: "green", icon: "♣", label: "幸运草" },
-  { id: "purple", icon: "◆", label: "糖果" },
+  { id: "bear", icon: "🐻", label: "小熊" },
+  { id: "rabbit", icon: "🐰", label: "兔兔" },
+  { id: "chick", icon: "🐥", label: "小鸡" },
+  { id: "frog", icon: "🐸", label: "青蛙" },
+  { id: "fox", icon: "🦊", label: "狐狸" },
+  { id: "berry", icon: "🍓", label: "草莓" },
 ];
 
 const homeView = document.querySelector("#homeView");
@@ -89,10 +125,12 @@ const matchBoardEl = document.querySelector("#matchBoard");
 const matchScoreEl = document.querySelector("#matchScore");
 const matchMovesEl = document.querySelector("#matchMoves");
 const matchTargetEl = document.querySelector("#matchTarget");
+const matchGoalTextEl = document.querySelector("#matchGoalText");
 const matchStatusTitleEl = document.querySelector("#matchStatusTitle");
 const matchStatusTextEl = document.querySelector("#matchStatusText");
 const matchRestartButton = document.querySelector("#matchRestartButton");
 const matchShuffleButton = document.querySelector("#matchShuffleButton");
+const matchModeButtons = document.querySelectorAll(".match-mode-button");
 
 let levelKey = "easy";
 let cells = [];
@@ -107,7 +145,8 @@ const VIEW_TRANSITION_MS = 460;
 let matchBoard = [];
 let selectedMatchIndex = null;
 let matchScore = 0;
-let matchMoves = MATCH3_MOVES;
+let matchModeKey = "tap";
+let matchMoves = MATCH3_MODES[matchModeKey].moves;
 let matchBusy = false;
 let matchFinished = false;
 
@@ -481,11 +520,15 @@ function matchCol(index) {
   return index % MATCH3_SIZE;
 }
 
+function getMatchMode() {
+  return MATCH3_MODES[matchModeKey] || MATCH3_MODES.tap;
+}
+
 function randomMatchType() {
   return MATCH3_TYPES[Math.floor(Math.random() * MATCH3_TYPES.length)].id;
 }
 
-function createMatchBoard() {
+function createMatchBoard(modeKey = matchModeKey) {
   const board = [];
   for (let row = 0; row < MATCH3_SIZE; row += 1) {
     for (let col = 0; col < MATCH3_SIZE; col += 1) {
@@ -505,6 +548,22 @@ function createMatchBoard() {
   return board;
 }
 
+function createPlayableMatchBoard(modeKey = matchModeKey) {
+  const mode = MATCH3_MODES[modeKey] || MATCH3_MODES.tap;
+  let board = createMatchBoard(modeKey);
+  let guard = 0;
+
+  while (guard < 80) {
+    matchBoard = board;
+    if (mode.mechanic === "tap" && hasConnectedGroup(mode.minGroup)) return board;
+    if (mode.mechanic === "swap" && hasValidSwapMove()) return board;
+    board = createMatchBoard(modeKey);
+    guard += 1;
+  }
+
+  return board;
+}
+
 function getMatchType(typeId) {
   return MATCH3_TYPES.find((type) => type.id === typeId) || MATCH3_TYPES[0];
 }
@@ -517,6 +576,58 @@ function isAdjacentMatchCell(first, second) {
 
 function swapMatchCells(first, second) {
   [matchBoard[first], matchBoard[second]] = [matchBoard[second], matchBoard[first]];
+}
+
+function getOrthogonalNeighbors(index) {
+  const row = matchRow(index);
+  const col = matchCol(index);
+  const list = [];
+  if (row > 0) list.push(matchIndex(row - 1, col));
+  if (row < MATCH3_SIZE - 1) list.push(matchIndex(row + 1, col));
+  if (col > 0) list.push(matchIndex(row, col - 1));
+  if (col < MATCH3_SIZE - 1) list.push(matchIndex(row, col + 1));
+  return list;
+}
+
+function findConnectedGroup(startIndex) {
+  const typeId = matchBoard[startIndex];
+  if (!typeId) return [];
+
+  const queue = [startIndex];
+  const seen = new Set();
+
+  while (queue.length) {
+    const index = queue.shift();
+    if (seen.has(index)) continue;
+    seen.add(index);
+
+    getOrthogonalNeighbors(index).forEach((nextIndex) => {
+      if (!seen.has(nextIndex) && matchBoard[nextIndex] === typeId) queue.push(nextIndex);
+    });
+  }
+
+  return [...seen];
+}
+
+function hasConnectedGroup(minGroup = 2) {
+  for (let index = 0; index < matchBoard.length; index += 1) {
+    if (findConnectedGroup(index).length >= minGroup) return true;
+  }
+  return false;
+}
+
+function hasValidSwapMove() {
+  for (let index = 0; index < matchBoard.length; index += 1) {
+    const neighbors = getOrthogonalNeighbors(index);
+    for (const nextIndex of neighbors) {
+      if (nextIndex < index) continue;
+      swapMatchCells(index, nextIndex);
+      const valid = findMatchGroups().length > 0;
+      swapMatchCells(index, nextIndex);
+      if (valid) return true;
+    }
+  }
+  return false;
 }
 
 function findMatchGroups() {
@@ -571,24 +682,27 @@ function collapseMatchBoard() {
 }
 
 function updateMatchMetrics() {
+  const mode = getMatchMode();
   matchScoreEl.textContent = String(matchScore);
   matchMovesEl.textContent = String(matchMoves).padStart(2, "0");
-  matchTargetEl.textContent = String(MATCH3_TARGET);
+  matchTargetEl.textContent = String(mode.target);
+  if (matchGoalTextEl) matchGoalTextEl.textContent = `${mode.target} 分`;
 }
 
 function setMatchStatus(type, cleared = 0) {
+  const mode = getMatchMode();
   match3View.classList.toggle("win", type === "win");
   match3View.classList.toggle("lost", type === "lost");
 
   if (type === "ready") {
-    matchStatusTitleEl.textContent = "准备消除";
-    matchStatusTextEl.textContent = "点击两个相邻方块进行交换，形成三个及以上同色方块即可消除。";
+    matchStatusTitleEl.textContent = mode.label;
+    matchStatusTextEl.textContent = mode.readyText;
   } else if (type === "cleared") {
     matchStatusTitleEl.textContent = "连消成功";
     matchStatusTextEl.textContent = `本轮消除了 ${cleared} 个方块，继续寻找更高分组合。`;
   } else if (type === "invalid") {
     matchStatusTitleEl.textContent = "这步无效";
-    matchStatusTextEl.textContent = "交换后没有形成三连，方块已自动复位。";
+    matchStatusTextEl.textContent = mode.invalidText;
   } else if (type === "win") {
     matchStatusTitleEl.textContent = "挑战完成";
     matchStatusTextEl.textContent = "目标分数已达成，可以重新开局继续挑战更高分。";
@@ -600,6 +714,8 @@ function setMatchStatus(type, cleared = 0) {
 
 function renderMatch3(highlightIndexes = []) {
   const highlights = new Set(highlightIndexes);
+  const mode = getMatchMode();
+  match3View.dataset.mode = matchModeKey;
   matchBoardEl.innerHTML = "";
   matchBoardEl.style.gridTemplateColumns = `repeat(${MATCH3_SIZE}, 1fr)`;
 
@@ -610,7 +726,7 @@ function renderMatch3(highlightIndexes = []) {
     button.className = `match-cell candy-${type.id}`;
     button.dataset.index = index;
     button.textContent = type.icon;
-    button.setAttribute("aria-label", `${matchRow(index) + 1} 行 ${matchCol(index) + 1} 列，${type.label}`);
+    button.setAttribute("aria-label", `${matchRow(index) + 1} 行 ${matchCol(index) + 1} 列，${type.label}，${mode.shortLabel}模式`);
     button.classList.toggle("selected", selectedMatchIndex === index);
     button.classList.toggle("clearing", highlights.has(index));
     button.addEventListener("click", () => handleMatchCellClick(index));
@@ -625,6 +741,7 @@ function wait(ms) {
 }
 
 async function resolveMatchBoard(initialGroups) {
+  const mode = getMatchMode();
   let groups = initialGroups;
   let combo = 1;
   let totalCleared = 0;
@@ -645,7 +762,7 @@ async function resolveMatchBoard(initialGroups) {
     combo += 1;
   }
 
-  if (matchScore >= MATCH3_TARGET) {
+  if (matchScore >= mode.target) {
     matchFinished = true;
     setMatchStatus("win");
   } else if (matchMoves <= 0) {
@@ -659,6 +776,24 @@ async function resolveMatchBoard(initialGroups) {
 
 async function handleMatchCellClick(index) {
   if (matchBusy || matchFinished) return;
+  const mode = getMatchMode();
+
+  if (mode.mechanic === "tap") {
+    const group = findConnectedGroup(index);
+    selectedMatchIndex = null;
+
+    if (group.length < mode.minGroup) {
+      setMatchStatus("invalid");
+      renderMatch3([index]);
+      return;
+    }
+
+    matchBusy = true;
+    matchMoves -= 1;
+    await resolveMatchBoard([group]);
+    matchBusy = false;
+    return;
+  }
 
   if (selectedMatchIndex === null) {
     selectedMatchIndex = index;
@@ -705,19 +840,31 @@ async function handleMatchCellClick(index) {
 function shuffleMatchBoard() {
   if (matchBusy) return;
   selectedMatchIndex = null;
-  matchBoard = createMatchBoard();
+  matchBoard = createPlayableMatchBoard();
   setMatchStatus("ready");
   renderMatch3();
 }
 
-function resetMatch3() {
-  matchBoard = createMatchBoard();
+function renderMatchModeButtons() {
+  matchModeButtons.forEach((button) => {
+    const mode = MATCH3_MODES[button.dataset.matchMode] || MATCH3_MODES.tap;
+    button.classList.toggle("active", button.dataset.matchMode === matchModeKey);
+    button.setAttribute("aria-pressed", String(button.dataset.matchMode === matchModeKey));
+    button.title = mode.description;
+  });
+}
+
+function resetMatch3(nextMode = matchModeKey) {
+  matchModeKey = nextMode;
+  const mode = getMatchMode();
+  matchBoard = createPlayableMatchBoard(matchModeKey);
   selectedMatchIndex = null;
   matchScore = 0;
-  matchMoves = MATCH3_MOVES;
+  matchMoves = mode.moves;
   matchBusy = false;
   matchFinished = false;
   match3View.classList.remove("win", "lost");
+  renderMatchModeButtons();
   setMatchStatus("ready");
   renderMatch3();
 }
@@ -729,8 +876,14 @@ difficultyButtons.forEach((button) => {
 restartButton.addEventListener("click", () => resetGame());
 backHomeButton.addEventListener("click", showHome);
 backHomeFromMatchButton.addEventListener("click", showHome);
-matchRestartButton.addEventListener("click", resetMatch3);
+matchRestartButton.addEventListener("click", () => resetMatch3());
 matchShuffleButton.addEventListener("click", shuffleMatchBoard);
+matchModeButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    if (matchBusy) return;
+    resetMatch3(button.dataset.matchMode);
+  });
+});
 
 soundButton.addEventListener("click", () => {
   soundOn = !soundOn;

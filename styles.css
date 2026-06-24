@@ -508,12 +508,24 @@ button {
 .match-preview-grid .drop::after { content: "●"; }
 .match-preview-grid .gem::after { content: "◆"; }
 .match-preview-grid .candy::after { content: "✦"; }
+.match-preview-grid .bear::after { content: "🐻"; }
+.match-preview-grid .rabbit::after { content: "🐰"; }
+.match-preview-grid .chick::after { content: "🐥"; }
+.match-preview-grid .frog::after { content: "🐸"; }
+.match-preview-grid .fox::after { content: "🦊"; }
+.match-preview-grid .berry::after { content: "🍓"; }
 
 .match-preview-grid .red { background: linear-gradient(145deg, #ff7e89, #f33e55); }
 .match-preview-grid .yellow { background: linear-gradient(145deg, #ffe482, #ffbf35); }
 .match-preview-grid .green { background: linear-gradient(145deg, #a8ec8e, #58c95b); }
 .match-preview-grid .blue { background: linear-gradient(145deg, #79c4ff, #3e8dff); }
 .match-preview-grid .purple { background: linear-gradient(145deg, #c58cff, #8f53e9); }
+.match-preview-grid .bear { background: linear-gradient(145deg, #f6c37d, #d88a3d); }
+.match-preview-grid .rabbit { background: linear-gradient(145deg, #ffb8db, #f46aa6); }
+.match-preview-grid .chick { background: linear-gradient(145deg, #ffe68e, #ffbd3f); }
+.match-preview-grid .frog { background: linear-gradient(145deg, #aaf09b, #48bf67); }
+.match-preview-grid .fox { background: linear-gradient(145deg, #ffa36f, #f06b35); }
+.match-preview-grid .berry { background: linear-gradient(145deg, #ff8798, #e83f5b); }
 
 .link-preview {
   position: relative;
@@ -914,6 +926,63 @@ button {
   font-size: 15px;
 }
 
+.match-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px 18px 14px;
+  border-right: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+}
+
+.match-mode-button {
+  display: grid;
+  gap: 3px;
+  min-height: 58px;
+  padding: 9px 12px;
+  border: 1px solid rgba(168, 85, 247, 0.12);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(250, 245, 255, 0.62));
+  color: var(--muted);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  text-align: left;
+  transition: transform 180ms ease, box-shadow 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+
+.match-mode-button strong {
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.15;
+}
+
+.match-mode-button span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.match-mode-button:hover {
+  transform: translateY(-2px);
+}
+
+.match-mode-button.active {
+  border-color: rgba(168, 85, 247, 0.28);
+  background:
+    radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.9), transparent 32%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(244, 236, 255, 0.86));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    0 12px 28px rgba(112, 72, 150, 0.12);
+}
+
+.match-mode-button.active strong {
+  color: var(--match-theme);
+}
+
 .match-restart {
   background: var(--match-theme);
   box-shadow: 0 10px 26px rgba(168, 85, 247, 0.24);
@@ -935,7 +1004,8 @@ button {
 
 .match-legend {
   display: grid;
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
   margin-top: auto;
   color: var(--muted);
   font-size: 14px;
@@ -955,7 +1025,8 @@ button {
   border-radius: 10px;
   color: rgba(255, 255, 255, 0.92);
   font-style: normal;
-  font-size: 15px;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  font-size: 16px;
   font-weight: 900;
   box-shadow: inset 0 2px 8px rgba(255, 255, 255, 0.28), inset 0 -7px 12px rgba(0, 0, 0, 0.08);
 }
@@ -993,6 +1064,7 @@ button {
   border: 0;
   border-radius: 18px;
   color: rgba(255, 255, 255, 0.94);
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
   font-size: clamp(17px, 4vw, 28px);
   font-weight: 900;
   line-height: 1;
@@ -1038,6 +1110,12 @@ button {
 .candy-blue { background: linear-gradient(145deg, #79c4ff, #3e8dff); }
 .candy-green { background: linear-gradient(145deg, #a8ec8e, #58c95b); }
 .candy-purple { background: linear-gradient(145deg, #c58cff, #8f53e9); }
+.candy-bear { background: linear-gradient(145deg, #f6c37d, #d88a3d); }
+.candy-rabbit { background: linear-gradient(145deg, #ffb8db, #f46aa6); }
+.candy-chick { background: linear-gradient(145deg, #ffe68e, #ffbd3f); }
+.candy-frog { background: linear-gradient(145deg, #aaf09b, #48bf67); }
+.candy-fox { background: linear-gradient(145deg, #ffa36f, #f06b35); }
+.candy-berry { background: linear-gradient(145deg, #ff8798, #e83f5b); }
 
 .cell {
   position: relative;
@@ -1180,6 +1258,10 @@ button {
 
   .match3-area {
     grid-template-columns: 1fr;
+  }
+
+  .match-mode-switch {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .match-board-wrap {
@@ -1411,6 +1493,36 @@ button {
     padding: 0 12px;
   }
 
+  .match-mode-switch {
+    gap: 8px;
+    overflow-x: auto;
+    padding: 10px 12px;
+    border-right: 0;
+    border-left: 0;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .match-mode-switch::-webkit-scrollbar {
+    display: none;
+  }
+
+  .match-mode-button {
+    min-width: 112px;
+    min-height: 54px;
+    padding: 8px 10px;
+    border-radius: 16px;
+    scroll-snap-align: start;
+  }
+
+  .match-mode-button strong {
+    font-size: 14px;
+  }
+
+  .match-mode-button span {
+    font-size: 11px;
+  }
+
   .match-statusbar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1526,7 +1638,7 @@ button {
 
   .match-cell {
     border-radius: 12px;
-    font-size: clamp(15px, 5vw, 22px);
+    font-size: clamp(16px, 5.4vw, 23px);
   }
 
   .match-cell::before {
