@@ -110,6 +110,56 @@
         </section>
       </section>
 
+      <section id="match3View" class="game-view match3-view hidden" aria-label="消消乐游戏">
+        <header class="game-topbar">
+          <button id="backHomeFromMatchButton" class="icon-button" type="button" aria-label="返回首页">‹</button>
+          <div>
+            <p class="eyebrow">Match 3</p>
+            <h1>消消乐</h1>
+          </div>
+          <div class="match-goal-pill" aria-label="本局目标">
+            <span>目标</span>
+            <strong>1500 分</strong>
+          </div>
+        </header>
+
+        <section class="statusbar match-statusbar" aria-label="消消乐状态">
+          <div class="metric">
+            <span>得分</span>
+            <strong id="matchScore">0</strong>
+          </div>
+          <button id="matchRestartButton" class="restart-button match-restart" type="button" aria-label="重新开始消消乐">
+            重新开始
+          </button>
+          <div class="metric">
+            <span>剩余步数</span>
+            <strong id="matchMoves">30</strong>
+          </div>
+          <div class="metric best">
+            <span>目标分</span>
+            <strong id="matchTarget">1500</strong>
+          </div>
+          <button id="matchShuffleButton" class="ghost-button match-shuffle" type="button">重新洗牌</button>
+        </section>
+
+        <section class="game-area match3-area">
+          <aside class="help-panel match-help">
+            <div>
+              <h2 id="matchStatusTitle">准备消除</h2>
+              <p id="matchStatusText">点击两个相邻方块进行交换，形成三个及以上同色方块即可消除。</p>
+            </div>
+            <div class="match-legend" aria-label="方块图例">
+              <span><i class="legend-candy candy-red">♥</i>爱心</span>
+              <span><i class="legend-candy candy-yellow">★</i>星星</span>
+              <span><i class="legend-candy candy-blue">●</i>水滴</span>
+            </div>
+          </aside>
+          <div class="match-board-wrap" aria-label="消消乐棋盘">
+            <div id="matchBoard" class="match-board" aria-label="消消乐棋盘"></div>
+          </div>
+        </section>
+      </section>
+
       <footer class="site-footer">作者：tz</footer>
     </main>
 
