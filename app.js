@@ -21,7 +21,7 @@ const GAME_LIST = [
     subtitle: "欢乐消除，轻松解压",
     themeColor: "#A855F7",
     gradient: "linear-gradient(180deg, #F4ECFF 0%, #FFFFFF 100%)",
-    available: false,
+    available: true,
     visual: `
       <div class="match-preview-grid">
         <span class="tile red heart"></span><span class="tile yellow star"></span><span class="tile green drop"></span>
@@ -55,11 +55,24 @@ const LEVELS = {
   expert: { label: "高级", rows: 16, cols: 30, mines: 99 },
 };
 
+const MATCH3_SIZE = 8;
+const MATCH3_MOVES = 30;
+const MATCH3_TARGET = 1500;
+const MATCH3_TYPES = [
+  { id: "red", icon: "♥", label: "爱心" },
+  { id: "yellow", icon: "★", label: "星星" },
+  { id: "blue", icon: "●", label: "水滴" },
+  { id: "green", icon: "♣", label: "幸运草" },
+  { id: "purple", icon: "◆", label: "糖果" },
+];
+
 const homeView = document.querySelector("#homeView");
 const minesweeperView = document.querySelector("#minesweeperView");
+const match3View = document.querySelector("#match3View");
 const appShell = document.querySelector(".app-shell");
 const gameListEl = document.querySelector("#gameList");
 const backHomeButton = document.querySelector("#backHomeButton");
+const backHomeFromMatchButton = document.querySelector("#backHomeFromMatchButton");
 const boardEl = document.querySelector("#board");
 const mineCountEl = document.querySelector("#mineCount");
 const timerEl = document.querySelector("#timer");
@@ -72,6 +85,14 @@ const difficultyButtons = document.querySelectorAll(".difficulty-button");
 const flagModeEl = document.querySelector("#flagMode");
 const soundButton = document.querySelector("#soundButton");
 const shell = document.querySelector(".game-view");
+const matchBoardEl = document.querySelector("#matchBoard");
+const matchScoreEl = document.querySelector("#matchScore");
+const matchMovesEl = document.querySelector("#matchMoves");
+const matchTargetEl = document.querySelector("#matchTarget");
+const matchStatusTitleEl = document.querySelector("#matchStatusTitle");
+const matchStatusTextEl = document.querySelector("#matchStatusText");
+const matchRestartButton = document.querySelector("#matchRestartButton");
+const matchShuffleButton = document.querySelector("#matchShuffleButton");
 
 let levelKey = "easy";
 let cells = [];
@@ -83,6 +104,12 @@ let soundOn = true;
 let activeView = "home";
 let viewTransitioning = false;
 const VIEW_TRANSITION_MS = 460;
+let matchBoard = [];
+let selectedMatchIndex = null;
+let matchScore = 0;
+let matchMoves = MATCH3_MOVES;
+let matchBusy = false;
+let matchFinished = false;
 
 function renderGameCards() {
   gameListEl.innerHTML = GAME_LIST.map((game) => `
@@ -103,7 +130,9 @@ function renderGameCards() {
   gameListEl.querySelectorAll(".game-card").forEach((card) => {
     card.addEventListener("click", () => {
       const game = GAME_LIST.find((item) => item.id === card.dataset.gameId);
-      if (game?.available) showMinesweeper();
+      if (!game?.available) return;
+      if (game.id === "minesweeper") showMinesweeper();
+      if (game.id === "match3") showMatch3();
     });
   });
 }
@@ -117,9 +146,14 @@ function animateViewChange(nextView) {
   if (viewTransitioning || activeView === nextView) return;
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const fromView = activeView === "home" ? homeView : minesweeperView;
-  const toView = nextView === "home" ? homeView : minesweeperView;
-  const directionClass = nextView === "game" ? "slide-to-game" : "slide-to-home";
+  const views = {
+    home: homeView,
+    minesweeper: minesweeperView,
+    match3: match3View,
+  };
+  const fromView = views[activeView];
+  const toView = views[nextView];
+  const directionClass = nextView === "home" ? "slide-to-home" : "slide-to-game";
 
   viewTransitioning = true;
   appShell.classList.add("view-transitioning", directionClass);
@@ -153,7 +187,13 @@ function showHome() {
 
 function showMinesweeper() {
   window.requestAnimationFrame(() => render());
-  animateViewChange("game");
+  animateViewChange("minesweeper");
+}
+
+function showMatch3() {
+  if (!matchBoard.length) resetMatch3();
+  window.requestAnimationFrame(() => renderMatch3());
+  animateViewChange("match3");
 }
 
 function pad(value) {
@@ -429,12 +469,268 @@ function resetGame(nextLevel = levelKey) {
   render();
 }
 
+function matchIndex(row, col) {
+  return row * MATCH3_SIZE + col;
+}
+
+function matchRow(index) {
+  return Math.floor(index / MATCH3_SIZE);
+}
+
+function matchCol(index) {
+  return index % MATCH3_SIZE;
+}
+
+function randomMatchType() {
+  return MATCH3_TYPES[Math.floor(Math.random() * MATCH3_TYPES.length)].id;
+}
+
+function createMatchBoard() {
+  const board = [];
+  for (let row = 0; row < MATCH3_SIZE; row += 1) {
+    for (let col = 0; col < MATCH3_SIZE; col += 1) {
+      let type = randomMatchType();
+      let guard = 0;
+      while (
+        guard < 20 &&
+        ((col >= 2 && board[matchIndex(row, col - 1)] === type && board[matchIndex(row, col - 2)] === type) ||
+          (row >= 2 && board[matchIndex(row - 1, col)] === type && board[matchIndex(row - 2, col)] === type))
+      ) {
+        type = randomMatchType();
+        guard += 1;
+      }
+      board.push(type);
+    }
+  }
+  return board;
+}
+
+function getMatchType(typeId) {
+  return MATCH3_TYPES.find((type) => type.id === typeId) || MATCH3_TYPES[0];
+}
+
+function isAdjacentMatchCell(first, second) {
+  const rowGap = Math.abs(matchRow(first) - matchRow(second));
+  const colGap = Math.abs(matchCol(first) - matchCol(second));
+  return rowGap + colGap === 1;
+}
+
+function swapMatchCells(first, second) {
+  [matchBoard[first], matchBoard[second]] = [matchBoard[second], matchBoard[first]];
+}
+
+function findMatchGroups() {
+  const groups = [];
+
+  for (let row = 0; row < MATCH3_SIZE; row += 1) {
+    let runStart = 0;
+    for (let col = 1; col <= MATCH3_SIZE; col += 1) {
+      const current = col < MATCH3_SIZE ? matchBoard[matchIndex(row, col)] : null;
+      const previous = matchBoard[matchIndex(row, col - 1)];
+      if (current !== previous) {
+        if (previous && col - runStart >= 3) {
+          groups.push(Array.from({ length: col - runStart }, (_, offset) => matchIndex(row, runStart + offset)));
+        }
+        runStart = col;
+      }
+    }
+  }
+
+  for (let col = 0; col < MATCH3_SIZE; col += 1) {
+    let runStart = 0;
+    for (let row = 1; row <= MATCH3_SIZE; row += 1) {
+      const current = row < MATCH3_SIZE ? matchBoard[matchIndex(row, col)] : null;
+      const previous = matchBoard[matchIndex(row - 1, col)];
+      if (current !== previous) {
+        if (previous && row - runStart >= 3) {
+          groups.push(Array.from({ length: row - runStart }, (_, offset) => matchIndex(runStart + offset, col)));
+        }
+        runStart = row;
+      }
+    }
+  }
+
+  return groups;
+}
+
+function uniqueMatchedIndexes(groups) {
+  return [...new Set(groups.flat())];
+}
+
+function collapseMatchBoard() {
+  for (let col = 0; col < MATCH3_SIZE; col += 1) {
+    const column = [];
+    for (let row = MATCH3_SIZE - 1; row >= 0; row -= 1) {
+      const value = matchBoard[matchIndex(row, col)];
+      if (value) column.push(value);
+    }
+    for (let row = MATCH3_SIZE - 1; row >= 0; row -= 1) {
+      matchBoard[matchIndex(row, col)] = column.shift() || randomMatchType();
+    }
+  }
+}
+
+function updateMatchMetrics() {
+  matchScoreEl.textContent = String(matchScore);
+  matchMovesEl.textContent = String(matchMoves).padStart(2, "0");
+  matchTargetEl.textContent = String(MATCH3_TARGET);
+}
+
+function setMatchStatus(type, cleared = 0) {
+  match3View.classList.toggle("win", type === "win");
+  match3View.classList.toggle("lost", type === "lost");
+
+  if (type === "ready") {
+    matchStatusTitleEl.textContent = "准备消除";
+    matchStatusTextEl.textContent = "点击两个相邻方块进行交换，形成三个及以上同色方块即可消除。";
+  } else if (type === "cleared") {
+    matchStatusTitleEl.textContent = "连消成功";
+    matchStatusTextEl.textContent = `本轮消除了 ${cleared} 个方块，继续寻找更高分组合。`;
+  } else if (type === "invalid") {
+    matchStatusTitleEl.textContent = "这步无效";
+    matchStatusTextEl.textContent = "交换后没有形成三连，方块已自动复位。";
+  } else if (type === "win") {
+    matchStatusTitleEl.textContent = "挑战完成";
+    matchStatusTextEl.textContent = "目标分数已达成，可以重新开局继续挑战更高分。";
+  } else if (type === "lost") {
+    matchStatusTitleEl.textContent = "步数用完";
+    matchStatusTextEl.textContent = "还差一点点，重新开始会生成新的方块组合。";
+  }
+}
+
+function renderMatch3(highlightIndexes = []) {
+  const highlights = new Set(highlightIndexes);
+  matchBoardEl.innerHTML = "";
+  matchBoardEl.style.gridTemplateColumns = `repeat(${MATCH3_SIZE}, 1fr)`;
+
+  matchBoard.forEach((typeId, index) => {
+    const type = getMatchType(typeId);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `match-cell candy-${type.id}`;
+    button.dataset.index = index;
+    button.textContent = type.icon;
+    button.setAttribute("aria-label", `${matchRow(index) + 1} 行 ${matchCol(index) + 1} 列，${type.label}`);
+    button.classList.toggle("selected", selectedMatchIndex === index);
+    button.classList.toggle("clearing", highlights.has(index));
+    button.addEventListener("click", () => handleMatchCellClick(index));
+    matchBoardEl.appendChild(button);
+  });
+
+  updateMatchMetrics();
+}
+
+function wait(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function resolveMatchBoard(initialGroups) {
+  let groups = initialGroups;
+  let combo = 1;
+  let totalCleared = 0;
+
+  while (groups.length) {
+    const matched = uniqueMatchedIndexes(groups);
+    totalCleared += matched.length;
+    matchScore += matched.length * 30 * combo;
+    renderMatch3(matched);
+    await wait(180);
+    matched.forEach((index) => {
+      matchBoard[index] = null;
+    });
+    collapseMatchBoard();
+    renderMatch3();
+    await wait(160);
+    groups = findMatchGroups();
+    combo += 1;
+  }
+
+  if (matchScore >= MATCH3_TARGET) {
+    matchFinished = true;
+    setMatchStatus("win");
+  } else if (matchMoves <= 0) {
+    matchFinished = true;
+    setMatchStatus("lost");
+  } else {
+    setMatchStatus("cleared", totalCleared);
+  }
+  renderMatch3();
+}
+
+async function handleMatchCellClick(index) {
+  if (matchBusy || matchFinished) return;
+
+  if (selectedMatchIndex === null) {
+    selectedMatchIndex = index;
+    renderMatch3();
+    return;
+  }
+
+  if (selectedMatchIndex === index) {
+    selectedMatchIndex = null;
+    renderMatch3();
+    return;
+  }
+
+  if (!isAdjacentMatchCell(selectedMatchIndex, index)) {
+    selectedMatchIndex = index;
+    renderMatch3();
+    return;
+  }
+
+  matchBusy = true;
+  const first = selectedMatchIndex;
+  const second = index;
+  selectedMatchIndex = null;
+  swapMatchCells(first, second);
+  renderMatch3([first, second]);
+  await wait(120);
+
+  const groups = findMatchGroups();
+  if (!groups.length) {
+    swapMatchCells(first, second);
+    setMatchStatus("invalid");
+    renderMatch3([first, second]);
+    await wait(180);
+    renderMatch3();
+    matchBusy = false;
+    return;
+  }
+
+  matchMoves -= 1;
+  await resolveMatchBoard(groups);
+  matchBusy = false;
+}
+
+function shuffleMatchBoard() {
+  if (matchBusy) return;
+  selectedMatchIndex = null;
+  matchBoard = createMatchBoard();
+  setMatchStatus("ready");
+  renderMatch3();
+}
+
+function resetMatch3() {
+  matchBoard = createMatchBoard();
+  selectedMatchIndex = null;
+  matchScore = 0;
+  matchMoves = MATCH3_MOVES;
+  matchBusy = false;
+  matchFinished = false;
+  match3View.classList.remove("win", "lost");
+  setMatchStatus("ready");
+  renderMatch3();
+}
+
 difficultyButtons.forEach((button) => {
   button.addEventListener("click", () => resetGame(button.dataset.level));
 });
 
 restartButton.addEventListener("click", () => resetGame());
 backHomeButton.addEventListener("click", showHome);
+backHomeFromMatchButton.addEventListener("click", showHome);
+matchRestartButton.addEventListener("click", resetMatch3);
+matchShuffleButton.addEventListener("click", shuffleMatchBoard);
 
 soundButton.addEventListener("click", () => {
   soundOn = !soundOn;
@@ -445,5 +741,7 @@ window.addEventListener("resize", render);
 
 setViewHidden(homeView, false);
 setViewHidden(minesweeperView, true);
+setViewHidden(match3View, true);
 renderGameCards();
 resetGame();
+resetMatch3();
