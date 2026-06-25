@@ -712,11 +712,26 @@ function setMatchStatus(type, cleared = 0) {
   }
 }
 
-function renderMatch3(highlightIndexes = []) {
+function showMatchComboBadge(cleared, combo) {
+  const wrap = matchBoardEl.parentElement;
+  if (!wrap) return;
+
+  wrap.querySelector(".match-combo-badge")?.remove();
+  const badge = document.createElement("div");
+  badge.className = "match-combo-badge";
+  badge.textContent = combo > 1 ? `连消 x${combo}  +${cleared * 30 * combo}` : `+${cleared * 30}`;
+  wrap.appendChild(badge);
+  window.setTimeout(() => badge.remove(), 820);
+}
+
+function renderMatch3(highlightIndexes = [], options = {}) {
   const highlights = new Set(highlightIndexes);
+  const highlightOrder = new Map(highlightIndexes.map((index, order) => [index, order]));
   const mode = getMatchMode();
   match3View.dataset.mode = matchModeKey;
   matchBoardEl.innerHTML = "";
+  matchBoardEl.classList.toggle("is-clearing", highlights.size > 0);
+  matchBoardEl.classList.toggle("is-refilling", Boolean(options.refilling));
   matchBoardEl.style.gridTemplateColumns = `repeat(${MATCH3_SIZE}, 1fr)`;
 
   matchBoard.forEach((typeId, index) => {
@@ -729,6 +744,13 @@ function renderMatch3(highlightIndexes = []) {
     button.setAttribute("aria-label", `${matchRow(index) + 1} 行 ${matchCol(index) + 1} 列，${type.label}，${mode.shortLabel}模式`);
     button.classList.toggle("selected", selectedMatchIndex === index);
     button.classList.toggle("clearing", highlights.has(index));
+    button.classList.toggle("drop-in", Boolean(options.refilling));
+    if (highlights.has(index)) {
+      button.style.setProperty("--clear-delay", `${(highlightOrder.get(index) || 0) * 18}ms`);
+    }
+    if (options.refilling) {
+      button.style.setProperty("--drop-delay", `${(MATCH3_SIZE - matchRow(index)) * 12}ms`);
+    }
     button.addEventListener("click", () => handleMatchCellClick(index));
     matchBoardEl.appendChild(button);
   });
@@ -750,14 +772,15 @@ async function resolveMatchBoard(initialGroups) {
     const matched = uniqueMatchedIndexes(groups);
     totalCleared += matched.length;
     matchScore += matched.length * 30 * combo;
+    showMatchComboBadge(matched.length, combo);
     renderMatch3(matched);
-    await wait(180);
+    await wait(420);
     matched.forEach((index) => {
       matchBoard[index] = null;
     });
     collapseMatchBoard();
-    renderMatch3();
-    await wait(160);
+    renderMatch3([], { refilling: true });
+    await wait(300);
     groups = findMatchGroups();
     combo += 1;
   }
