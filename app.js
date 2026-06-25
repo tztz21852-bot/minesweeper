@@ -741,6 +741,8 @@ function renderMatch3(highlightIndexes = [], options = {}) {
   const highlights = new Set(highlightIndexes);
   const highlightOrder = new Map(highlightIndexes.map((index, order) => [index, order]));
   const refillIndexes = new Set(options.refillIndexes || []);
+  const invalidIndexes = new Set(options.invalidIndexes || []);
+  const activeIndexes = new Set(options.activeIndexes || []);
   const mode = getMatchMode();
   match3View.dataset.mode = matchModeKey;
   matchBoardEl.classList.toggle("is-clearing", highlights.size > 0);
@@ -759,6 +761,8 @@ function renderMatch3(highlightIndexes = [], options = {}) {
     button.classList.toggle("selected", selectedMatchIndex === index);
     button.classList.toggle("clearing", highlights.has(index));
     button.classList.toggle("drop-in", refillIndexes.has(index));
+    button.classList.toggle("invalid", invalidIndexes.has(index));
+    button.classList.toggle("swapping", activeIndexes.has(index));
     if (highlights.has(index)) {
       button.style.setProperty("--clear-delay", `${(highlightOrder.get(index) || 0) * 18}ms`);
     }
@@ -775,6 +779,13 @@ function renderMatch3(highlightIndexes = [], options = {}) {
 
 function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function showInvalidMatchFeedback(indexes) {
+  setMatchStatus("invalid");
+  renderMatch3([], { invalidIndexes: indexes });
+  await wait(240);
+  renderMatch3();
 }
 
 async function resolveMatchBoard(initialGroups) {
@@ -822,8 +833,9 @@ async function handleMatchCellClick(index) {
     selectedMatchIndex = null;
 
     if (group.length < mode.minGroup) {
-      setMatchStatus("invalid");
-      renderMatch3([index]);
+      matchBusy = true;
+      await showInvalidMatchFeedback([index]);
+      matchBusy = false;
       return;
     }
 
@@ -857,16 +869,13 @@ async function handleMatchCellClick(index) {
   const second = index;
   selectedMatchIndex = null;
   swapMatchCells(first, second);
-  renderMatch3([first, second]);
+  renderMatch3([], { activeIndexes: [first, second] });
   await wait(120);
 
   const groups = findMatchGroups();
   if (!groups.length) {
     swapMatchCells(first, second);
-    setMatchStatus("invalid");
-    renderMatch3([first, second]);
-    await wait(180);
-    renderMatch3();
+    await showInvalidMatchFeedback([first, second]);
     matchBusy = false;
     return;
   }
