@@ -724,15 +724,29 @@ function showMatchComboBadge(cleared, combo) {
   window.setTimeout(() => badge.remove(), 820);
 }
 
+function indexesInMatchedColumns(indexes) {
+  const columns = new Set(indexes.map((index) => matchCol(index)));
+  const affected = [];
+
+  columns.forEach((col) => {
+    for (let row = 0; row < MATCH3_SIZE; row += 1) {
+      affected.push(matchIndex(row, col));
+    }
+  });
+
+  return affected;
+}
+
 function renderMatch3(highlightIndexes = [], options = {}) {
   const highlights = new Set(highlightIndexes);
   const highlightOrder = new Map(highlightIndexes.map((index, order) => [index, order]));
+  const refillIndexes = new Set(options.refillIndexes || []);
   const mode = getMatchMode();
   match3View.dataset.mode = matchModeKey;
-  matchBoardEl.innerHTML = "";
   matchBoardEl.classList.toggle("is-clearing", highlights.size > 0);
-  matchBoardEl.classList.toggle("is-refilling", Boolean(options.refilling));
+  matchBoardEl.classList.toggle("is-refilling", refillIndexes.size > 0);
   matchBoardEl.style.gridTemplateColumns = `repeat(${MATCH3_SIZE}, 1fr)`;
+  const fragment = document.createDocumentFragment();
 
   matchBoard.forEach((typeId, index) => {
     const type = getMatchType(typeId);
@@ -744,17 +758,18 @@ function renderMatch3(highlightIndexes = [], options = {}) {
     button.setAttribute("aria-label", `${matchRow(index) + 1} 行 ${matchCol(index) + 1} 列，${type.label}，${mode.shortLabel}模式`);
     button.classList.toggle("selected", selectedMatchIndex === index);
     button.classList.toggle("clearing", highlights.has(index));
-    button.classList.toggle("drop-in", Boolean(options.refilling));
+    button.classList.toggle("drop-in", refillIndexes.has(index));
     if (highlights.has(index)) {
       button.style.setProperty("--clear-delay", `${(highlightOrder.get(index) || 0) * 18}ms`);
     }
-    if (options.refilling) {
+    if (refillIndexes.has(index)) {
       button.style.setProperty("--drop-delay", `${(MATCH3_SIZE - matchRow(index)) * 12}ms`);
     }
     button.addEventListener("click", () => handleMatchCellClick(index));
-    matchBoardEl.appendChild(button);
+    fragment.appendChild(button);
   });
 
+  matchBoardEl.replaceChildren(fragment);
   updateMatchMetrics();
 }
 
@@ -774,13 +789,14 @@ async function resolveMatchBoard(initialGroups) {
     matchScore += matched.length * 30 * combo;
     showMatchComboBadge(matched.length, combo);
     renderMatch3(matched);
-    await wait(420);
+    await wait(480);
     matched.forEach((index) => {
       matchBoard[index] = null;
     });
+    const refillIndexes = indexesInMatchedColumns(matched);
     collapseMatchBoard();
-    renderMatch3([], { refilling: true });
-    await wait(300);
+    renderMatch3([], { refillIndexes });
+    await wait(220);
     groups = findMatchGroups();
     combo += 1;
   }
