@@ -36,7 +36,7 @@ const GAME_LIST = [
     subtitle: "连线配对，考验眼力",
     themeColor: "#4CAF50",
     gradient: "linear-gradient(180deg, #EEF8EA 0%, #FFFFFF 100%)",
-    available: false,
+    available: true,
     visual: `
       <div class="link-preview">
         <span class="fruit strawberry">🍓</span>
@@ -102,13 +102,30 @@ const MATCH3_TYPES = [
   { id: "berry", icon: "🍓", label: "草莓" },
 ];
 
+const LINK_ROWS = 8;
+const LINK_COLS = 10;
+const LINK_TYPES = [
+  { id: "sun", icon: "☀", label: "太阳" },
+  { id: "heart", icon: "♥", label: "爱心" },
+  { id: "star", icon: "★", label: "星星" },
+  { id: "leaf", icon: "●", label: "绿珠" },
+  { id: "drop", icon: "●", label: "水滴" },
+  { id: "gem", icon: "◆", label: "宝石" },
+  { id: "moon", icon: "◐", label: "月亮" },
+  { id: "flower", icon: "✿", label: "花朵" },
+  { id: "clover", icon: "♣", label: "四叶草" },
+  { id: "spark", icon: "✦", label: "闪光" },
+];
+
 const homeView = document.querySelector("#homeView");
 const minesweeperView = document.querySelector("#minesweeperView");
 const match3View = document.querySelector("#match3View");
+const linkView = document.querySelector("#linkView");
 const appShell = document.querySelector(".app-shell");
 const gameListEl = document.querySelector("#gameList");
 const backHomeButton = document.querySelector("#backHomeButton");
 const backHomeFromMatchButton = document.querySelector("#backHomeFromMatchButton");
+const backHomeFromLinkButton = document.querySelector("#backHomeFromLinkButton");
 const boardEl = document.querySelector("#board");
 const mineCountEl = document.querySelector("#mineCount");
 const timerEl = document.querySelector("#timer");
@@ -131,6 +148,16 @@ const matchStatusTextEl = document.querySelector("#matchStatusText");
 const matchRestartButton = document.querySelector("#matchRestartButton");
 const matchShuffleButton = document.querySelector("#matchShuffleButton");
 const matchModeButtons = document.querySelectorAll(".match-mode-button");
+const linkBoardEl = document.querySelector("#linkBoard");
+const linkLightningEl = document.querySelector("#linkLightning");
+const linkScoreEl = document.querySelector("#linkScore");
+const linkComboEl = document.querySelector("#linkCombo");
+const linkRemainEl = document.querySelector("#linkRemain");
+const linkRemainMetricEl = document.querySelector("#linkRemainMetric");
+const linkStatusTitleEl = document.querySelector("#linkStatusTitle");
+const linkStatusTextEl = document.querySelector("#linkStatusText");
+const linkRestartButton = document.querySelector("#linkRestartButton");
+const linkShuffleButton = document.querySelector("#linkShuffleButton");
 
 let levelKey = "easy";
 let cells = [];
@@ -149,6 +176,12 @@ let matchModeKey = "tap";
 let matchMoves = MATCH3_MODES[matchModeKey].moves;
 let matchBusy = false;
 let matchFinished = false;
+let linkBoard = [];
+let selectedLinkIndex = null;
+let linkScore = 0;
+let linkCombo = 0;
+let linkBusy = false;
+let linkFinished = false;
 
 function renderGameCards() {
   gameListEl.innerHTML = GAME_LIST.map((game) => `
@@ -172,6 +205,7 @@ function renderGameCards() {
       if (!game?.available) return;
       if (game.id === "minesweeper") showMinesweeper();
       if (game.id === "match3") showMatch3();
+      if (game.id === "link") showLink();
     });
   });
 }
@@ -189,6 +223,7 @@ function animateViewChange(nextView) {
     home: homeView,
     minesweeper: minesweeperView,
     match3: match3View,
+    link: linkView,
   };
   const fromView = views[activeView];
   const toView = views[nextView];
@@ -233,6 +268,12 @@ function showMatch3() {
   if (!matchBoard.length) resetMatch3();
   window.requestAnimationFrame(() => renderMatch3());
   animateViewChange("match3");
+}
+
+function showLink() {
+  if (!linkBoard.length) resetLink();
+  window.requestAnimationFrame(() => renderLink());
+  animateViewChange("link");
 }
 
 function pad(value) {
@@ -917,6 +958,338 @@ function resetMatch3(nextMode = matchModeKey) {
   renderMatch3();
 }
 
+function linkIndex(row, col) {
+  return row * LINK_COLS + col;
+}
+
+function linkRow(index) {
+  return Math.floor(index / LINK_COLS);
+}
+
+function linkCol(index) {
+  return index % LINK_COLS;
+}
+
+function getLinkType(typeId) {
+  return LINK_TYPES.find((type) => type.id === typeId) || LINK_TYPES[0];
+}
+
+function shuffleList(list) {
+  const result = [...list];
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function createLinkBoardFromValues(values) {
+  const pairs = Array.from({ length: (LINK_ROWS * LINK_COLS) / 2 }, (_, index) => {
+    const type = LINK_TYPES[index % LINK_TYPES.length].id;
+    return [type, type];
+  }).flat();
+  return shuffleList(values || pairs);
+}
+
+function createPlayableLinkBoard(values = null) {
+  let board = createLinkBoardFromValues(values);
+  let guard = 0;
+
+  while (guard < 120) {
+    linkBoard = board;
+    if (hasAvailableLinkMove()) return board;
+    board = createLinkBoardFromValues(values || board.filter(Boolean));
+    guard += 1;
+  }
+
+  return board;
+}
+
+function isLinkPointInside(row, col) {
+  return row >= 0 && row < LINK_ROWS && col >= 0 && col < LINK_COLS;
+}
+
+function isLinkPointBlocked(row, col, firstIndex, secondIndex) {
+  if (!isLinkPointInside(row, col)) return false;
+  const index = linkIndex(row, col);
+  return index !== firstIndex && index !== secondIndex && Boolean(linkBoard[index]);
+}
+
+function compressLinkPath(path) {
+  if (path.length <= 2) return path;
+  const result = [path[0]];
+
+  for (let i = 1; i < path.length - 1; i += 1) {
+    const prev = result[result.length - 1];
+    const current = path[i];
+    const next = path[i + 1];
+    const sameRow = prev.row === current.row && current.row === next.row;
+    const sameCol = prev.col === current.col && current.col === next.col;
+    if (!sameRow && !sameCol) result.push(current);
+  }
+
+  result.push(path[path.length - 1]);
+  return result;
+}
+
+function findLinkPath(firstIndex, secondIndex) {
+  if (firstIndex === secondIndex) return null;
+  if (!linkBoard[firstIndex] || !linkBoard[secondIndex]) return null;
+  if (linkBoard[firstIndex] !== linkBoard[secondIndex]) return null;
+
+  const start = { row: linkRow(firstIndex), col: linkCol(firstIndex) };
+  const end = { row: linkRow(secondIndex), col: linkCol(secondIndex) };
+  const directions = [
+    { row: -1, col: 0, key: "up" },
+    { row: 1, col: 0, key: "down" },
+    { row: 0, col: -1, key: "left" },
+    { row: 0, col: 1, key: "right" },
+  ];
+  const queue = [{ ...start, direction: null, turns: 0, path: [start] }];
+  const best = new Map();
+
+  while (queue.length) {
+    const current = queue.shift();
+    if (current.row === end.row && current.col === end.col) {
+      return compressLinkPath(current.path);
+    }
+
+    directions.forEach((direction) => {
+      const row = current.row + direction.row;
+      const col = current.col + direction.col;
+      if (row < -1 || row > LINK_ROWS || col < -1 || col > LINK_COLS) return;
+      const turns = current.direction && current.direction !== direction.key ? current.turns + 1 : current.turns;
+      if (turns > 2) return;
+      if (isLinkPointBlocked(row, col, firstIndex, secondIndex)) return;
+
+      const stateKey = `${row},${col},${direction.key}`;
+      if (best.has(stateKey) && best.get(stateKey) <= turns) return;
+      best.set(stateKey, turns);
+      queue.push({
+        row,
+        col,
+        direction: direction.key,
+        turns,
+        path: [...current.path, { row, col }],
+      });
+    });
+  }
+
+  return null;
+}
+
+function hasAvailableLinkMove() {
+  for (let first = 0; first < linkBoard.length; first += 1) {
+    if (!linkBoard[first]) continue;
+    for (let second = first + 1; second < linkBoard.length; second += 1) {
+      if (linkBoard[first] === linkBoard[second] && findLinkPath(first, second)) return true;
+    }
+  }
+  return false;
+}
+
+function updateLinkMetrics() {
+  const remain = linkBoard.filter(Boolean).length;
+  linkScoreEl.textContent = String(linkScore);
+  linkComboEl.textContent = String(linkCombo);
+  linkRemainEl.textContent = String(remain);
+  linkRemainMetricEl.textContent = String(remain);
+}
+
+function setLinkStatus(type) {
+  linkView.classList.toggle("win", type === "win");
+
+  if (type === "ready") {
+    linkStatusTitleEl.textContent = "准备连线";
+    linkStatusTextEl.textContent = "点击两个相同图案，路径最多两次拐弯且不能穿过其他方块，即可触发闪电消除。";
+  } else if (type === "selected") {
+    linkStatusTitleEl.textContent = "已选中";
+    linkStatusTextEl.textContent = "继续点击相同图案，系统会判断是否能用两次以内拐弯连接。";
+  } else if (type === "invalid") {
+    linkStatusTitleEl.textContent = "连接失败";
+    linkStatusTextEl.textContent = "两个方块需要相同，并且连接路径不能超过两次拐弯或穿过其他方块。";
+  } else if (type === "cleared") {
+    linkStatusTitleEl.textContent = "闪电消除";
+    linkStatusTextEl.textContent = "连接成功，继续寻找下一对可以连通的相同方块。";
+  } else if (type === "reshuffle") {
+    linkStatusTitleEl.textContent = "已自动洗牌";
+    linkStatusTextEl.textContent = "当前局面没有可连接组合，已保留剩余方块并重新排列。";
+  } else if (type === "win") {
+    linkStatusTitleEl.textContent = "挑战完成";
+    linkStatusTextEl.textContent = "全部方块已消除，漂亮！可以重新开始挑战更快通关。";
+  }
+}
+
+function renderLink(options = {}) {
+  const selected = selectedLinkIndex;
+  const invalidIndexes = new Set(options.invalidIndexes || []);
+  const clearingIndexes = new Set(options.clearingIndexes || []);
+  const strikingIndexes = new Set(options.strikingIndexes || []);
+  const fragment = document.createDocumentFragment();
+
+  linkBoardEl.style.gridTemplateColumns = `repeat(${LINK_COLS}, 1fr)`;
+  linkBoard.forEach((typeId, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "link-cell";
+    button.dataset.index = index;
+
+    if (!typeId) {
+      button.classList.add("empty");
+      button.disabled = true;
+    } else {
+      const type = getLinkType(typeId);
+      button.classList.add(`tile-${type.id}`);
+      button.textContent = type.icon;
+      button.setAttribute("aria-label", `${linkRow(index) + 1} 行 ${linkCol(index) + 1} 列，${type.label}`);
+      button.classList.toggle("selected", selected === index);
+      button.classList.toggle("invalid", invalidIndexes.has(index));
+      button.classList.toggle("clearing", clearingIndexes.has(index));
+      button.classList.toggle("striking", strikingIndexes.has(index));
+      button.addEventListener("click", () => handleLinkCellClick(index));
+    }
+
+    fragment.appendChild(button);
+  });
+
+  linkBoardEl.replaceChildren(fragment);
+  updateLinkMetrics();
+}
+
+function getLinkSvgPoint(point) {
+  const wrapRect = linkBoardEl.parentElement.getBoundingClientRect();
+  const firstCell = linkBoardEl.querySelector(".link-cell");
+  if (!firstCell) return { x: 0, y: 0 };
+  const firstRect = firstCell.getBoundingClientRect();
+  const boardRect = linkBoardEl.getBoundingClientRect();
+  const cellWidth = firstRect.width;
+  const cellHeight = firstRect.height;
+  const gapX = LINK_COLS > 1 ? (boardRect.width - cellWidth * LINK_COLS) / (LINK_COLS - 1) : 0;
+  const gapY = LINK_ROWS > 1 ? (boardRect.height - cellHeight * LINK_ROWS) / (LINK_ROWS - 1) : 0;
+  const stepX = cellWidth + gapX;
+  const stepY = cellHeight + gapY;
+  const startX = firstRect.left - wrapRect.left + cellWidth / 2;
+  const startY = firstRect.top - wrapRect.top + cellHeight / 2;
+  const boardLeft = boardRect.left - wrapRect.left;
+  const boardRight = boardRect.right - wrapRect.left;
+  const boardTop = boardRect.top - wrapRect.top;
+  const boardBottom = boardRect.bottom - wrapRect.top;
+  const outsideInset = 8;
+
+  return {
+    x: point.col < 0 ? boardLeft + outsideInset : point.col >= LINK_COLS ? boardRight - outsideInset : startX + point.col * stepX,
+    y: point.row < 0 ? boardTop + outsideInset : point.row >= LINK_ROWS ? boardBottom - outsideInset : startY + point.row * stepY,
+  };
+}
+
+function drawLinkLightning(path) {
+  const wrapRect = linkBoardEl.parentElement.getBoundingClientRect();
+  const points = path.map(getLinkSvgPoint);
+  const pointString = points.map((point) => `${point.x},${point.y}`).join(" ");
+  linkLightningEl.setAttribute("viewBox", `0 0 ${wrapRect.width} ${wrapRect.height}`);
+  linkLightningEl.innerHTML = `
+    <polyline class="link-lightning-glow" points="${pointString}" />
+    <polyline class="link-lightning-core" points="${pointString}" />
+  `;
+
+  linkLightningEl.querySelectorAll("polyline").forEach((line) => {
+    const length = line.getTotalLength();
+    line.style.strokeDasharray = `${length}`;
+    line.style.strokeDashoffset = `${length}`;
+    line.style.setProperty("--dash", `${length}`);
+  });
+}
+
+function clearLinkLightning() {
+  linkLightningEl.innerHTML = "";
+}
+
+async function showInvalidLinkFeedback(indexes) {
+  setLinkStatus("invalid");
+  renderLink({ invalidIndexes: indexes });
+  await wait(260);
+  selectedLinkIndex = null;
+  renderLink();
+}
+
+function reshuffleLinkBoard(showStatus = true) {
+  const remaining = linkBoard.filter(Boolean);
+  linkBoard = createPlayableLinkBoard(remaining);
+  selectedLinkIndex = null;
+  if (showStatus) setLinkStatus("reshuffle");
+  renderLink();
+}
+
+async function handleLinkCellClick(index) {
+  if (linkBusy || linkFinished || !linkBoard[index]) return;
+
+  if (selectedLinkIndex === null) {
+    selectedLinkIndex = index;
+    setLinkStatus("selected");
+    renderLink();
+    return;
+  }
+
+  if (selectedLinkIndex === index) {
+    selectedLinkIndex = null;
+    setLinkStatus("ready");
+    renderLink();
+    return;
+  }
+
+  const first = selectedLinkIndex;
+  const second = index;
+  const path = findLinkPath(first, second);
+
+  if (!path) {
+    linkCombo = 0;
+    linkBusy = true;
+    await showInvalidLinkFeedback([first, second]);
+    linkBusy = false;
+    return;
+  }
+
+  linkBusy = true;
+  selectedLinkIndex = null;
+  linkCombo += 1;
+  linkScore += 100 + Math.max(0, linkCombo - 1) * 20;
+  renderLink({ strikingIndexes: [first, second] });
+  drawLinkLightning(path);
+  await wait(420);
+  renderLink({ clearingIndexes: [first, second] });
+  await wait(220);
+  linkBoard[first] = null;
+  linkBoard[second] = null;
+  clearLinkLightning();
+
+  if (linkBoard.every((item) => !item)) {
+    linkFinished = true;
+    setLinkStatus("win");
+  } else {
+    setLinkStatus("cleared");
+    if (!hasAvailableLinkMove()) {
+      reshuffleLinkBoard(false);
+      setLinkStatus("reshuffle");
+    }
+  }
+
+  renderLink();
+  linkBusy = false;
+}
+
+function resetLink() {
+  linkBoard = createPlayableLinkBoard();
+  selectedLinkIndex = null;
+  linkScore = 0;
+  linkCombo = 0;
+  linkBusy = false;
+  linkFinished = false;
+  linkView.classList.remove("win");
+  clearLinkLightning();
+  setLinkStatus("ready");
+  renderLink();
+}
+
 difficultyButtons.forEach((button) => {
   button.addEventListener("click", () => resetGame(button.dataset.level));
 });
@@ -924,8 +1297,13 @@ difficultyButtons.forEach((button) => {
 restartButton.addEventListener("click", () => resetGame());
 backHomeButton.addEventListener("click", showHome);
 backHomeFromMatchButton.addEventListener("click", showHome);
+backHomeFromLinkButton.addEventListener("click", showHome);
 matchRestartButton.addEventListener("click", () => resetMatch3());
 matchShuffleButton.addEventListener("click", shuffleMatchBoard);
+linkRestartButton.addEventListener("click", resetLink);
+linkShuffleButton.addEventListener("click", () => {
+  if (!linkBusy && !linkFinished) reshuffleLinkBoard();
+});
 matchModeButtons.forEach((button) => {
   button.addEventListener("click", () => {
     if (matchBusy) return;
@@ -938,11 +1316,16 @@ soundButton.addEventListener("click", () => {
   soundButton.textContent = `声音：${soundOn ? "开" : "关"}`;
 });
 
-window.addEventListener("resize", render);
+window.addEventListener("resize", () => {
+  render();
+  if (activeView === "link") renderLink();
+});
 
 setViewHidden(homeView, false);
 setViewHidden(minesweeperView, true);
 setViewHidden(match3View, true);
+setViewHidden(linkView, true);
 renderGameCards();
 resetGame();
 resetMatch3();
+resetLink();

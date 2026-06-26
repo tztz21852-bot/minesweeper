@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>小游戏合集</title>
+    <link rel="icon" href="data:," />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -11,14 +12,13 @@
       <section id="homeView" class="home-view" aria-label="小游戏合集首页">
         <header class="home-header">
           <div>
-            <h1>欢迎回来 👋</h1>
+            <h1>小游戏合集</h1>
             <p>轻松游戏，快乐每一天</p>
           </div>
         </header>
 
         <section class="hero-card" aria-label="主视觉">
           <div class="hero-copy">
-            <p class="hero-kicker">Game Center</p>
             <h2>小游戏 大乐趣</h2>
             <p>经典玩法，随时畅玩</p>
           </div>
@@ -33,7 +33,7 @@
         <section class="section-block" aria-label="游戏选择">
           <div class="section-title">
             <h2>选择游戏</h2>
-            <span>3 款游戏</span>
+            <span>数据驱动扩展</span>
           </div>
           <div id="gameList" class="game-grid"></div>
         </section>
@@ -174,6 +174,57 @@
           </aside>
           <div class="match-board-wrap" aria-label="消消乐棋盘">
             <div id="matchBoard" class="match-board" aria-label="消消乐棋盘"></div>
+          </div>
+        </section>
+      </section>
+
+      <section id="linkView" class="game-view link-view hidden" aria-label="连连看游戏">
+        <header class="game-topbar">
+          <button id="backHomeFromLinkButton" class="icon-button" type="button" aria-label="返回首页">‹</button>
+          <div>
+            <p class="eyebrow">Tile Link</p>
+            <h1>连连看</h1>
+          </div>
+          <div class="link-goal-pill" aria-label="本局进度">
+            <span>剩余</span>
+            <strong id="linkRemain">80</strong>
+          </div>
+        </header>
+
+        <section class="statusbar link-statusbar" aria-label="连连看状态">
+          <div class="metric">
+            <span>得分</span>
+            <strong id="linkScore">0</strong>
+          </div>
+          <button id="linkRestartButton" class="restart-button link-restart" type="button" aria-label="重新开始连连看">
+            重新开始
+          </button>
+          <div class="metric">
+            <span>连击</span>
+            <strong id="linkCombo">0</strong>
+          </div>
+          <div class="metric best">
+            <span>剩余方块</span>
+            <strong id="linkRemainMetric">80</strong>
+          </div>
+          <button id="linkShuffleButton" class="ghost-button link-shuffle" type="button">重新洗牌</button>
+        </section>
+
+        <section class="game-area link-area">
+          <aside class="help-panel link-help">
+            <div>
+              <h2 id="linkStatusTitle">准备连线</h2>
+              <p id="linkStatusText">点击两个相同图案，路径最多两次拐弯且不能穿过其他方块，即可触发闪电消除。</p>
+            </div>
+            <div class="link-legend" aria-label="连连看图例">
+              <span><i class="link-legend-tile tile-sun">☀</i>明亮色块</span>
+              <span><i class="link-legend-tile tile-bolt">◆</i>折线路径</span>
+              <span><i class="link-legend-tile tile-leaf">●</i>成对消除</span>
+            </div>
+          </aside>
+          <div class="link-board-wrap" aria-label="连连看棋盘">
+            <svg id="linkLightning" class="link-lightning" aria-hidden="true"></svg>
+            <div id="linkBoard" class="link-board" aria-label="连连看棋盘"></div>
           </div>
         </section>
       </section>
